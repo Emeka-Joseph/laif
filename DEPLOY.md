@@ -28,13 +28,17 @@ The app builds its own tables on first start — there is nothing to import.
 
 | Field | Value |
 |---|---|
-| Python version | 3.9 or newer |
+| Python version | The newest offered (3.11+ if available; 3.9 works) |
 | Application root | `laif` |
 | Application URL | your domain, or a subdomain |
 | Application startup file | `passenger_wsgi.py` |
 | Application entry point | `application` |
 
 Leave the page open — you come back to it in steps 4 and 6.
+
+Python 3.9 is supported but reached end of life in October 2025, so it no
+longer receives security fixes. If the dropdown offers 3.11 or newer, take it.
+
 
 ## 3. Upload the files
 
@@ -117,6 +121,19 @@ like `source /home/USER/virtualenv/laif/3.11/bin/activate && cd /home/USER/laif`
 pip install -r requirements.txt
 ```
 
+Only Flask, Flask-SQLAlchemy and PyMySQL are pinned. Their own dependencies
+are left to pip, so the same file works whatever Python version cPanel gave
+you — on 3.9 it selects `click` 8.1.8, on 3.11+ it selects 8.5.0.
+
+Once the install succeeds, lock the exact set for next time:
+
+```bash
+pip freeze > requirements.lock.txt
+```
+
+Keep that file on the server. A lock file only describes the machine it was
+generated on, so one written on a Windows laptop will not install here.
+
 If your host has no Terminal, put `requirements.txt` in the **Configuration
 files** box on the Setup Python App page and press **Run Pip Install**.
 
@@ -179,6 +196,12 @@ If the site feels slow, an `.htaccess` in the application root will hand
 RewriteEngine On
 RewriteRule ^(images|laif_app/static)/ - [L]
 ```
+
+**If pip reports "Could not find a version that satisfies...".** A pinned
+version does not exist for this server's Python. The version list in the error
+shows what is available; the highest entry that pip did not reject is the one to
+use. `ERROR: Ignored the following versions that require a different python
+version` names the interpreter's limit.
 
 **If the site shows a 500.** Read `stderr.log` in the application root — the
 warnings from `passenger_wsgi.py` about unset variables appear there too.
