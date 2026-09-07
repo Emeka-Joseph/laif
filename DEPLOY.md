@@ -31,8 +31,16 @@ The app builds its own tables on first start — there is nothing to import.
 | Python version | The newest offered (3.11+ if available; 3.9 works) |
 | Application root | `laif` |
 | Application URL | your domain, or a subdomain |
-| Application startup file | `passenger_wsgi.py` |
+| Application startup file | `app.py` |
 | Application entry point | `application` |
+
+**The startup file must say `app.py`, not `passenger_wsgi.py`.** cPanel writes
+its own `passenger_wsgi.py` that loads whatever name is in that box. Naming
+`passenger_wsgi.py` there makes it load itself until Python raises
+`RecursionError: maximum recursion depth exceeded`, and the site never starts.
+The real application lives in `app.py`; the `passenger_wsgi.py` in the package is
+a two-line loader that cPanel is free to overwrite.
+
 
 Leave the page open — you come back to it in steps 4 and 6.
 
@@ -49,8 +57,8 @@ The zip is around 250 MB, almost all of it the photographs in `images/`. If
 cPanel's File Manager refuses a file that size, upload it over FTP/SFTP
 instead, or upload `images/` separately by FTP and the rest through the browser.
 
-When it is extracted, `passenger_wsgi.py` must sit directly in the application
-root — not inside a nested folder.
+When it is extracted, `app.py` and `passenger_wsgi.py` must sit directly in the
+application root — not inside a nested folder.
 
 ## 4. Set the environment variables
 
@@ -196,6 +204,11 @@ If the site feels slow, an `.htaccess` in the application root will hand
 RewriteEngine On
 RewriteRule ^(images|laif_app/static)/ - [L]
 ```
+
+**If the log fills with `RecursionError: maximum recursion depth exceeded`**, and
+the repeated line is `imp.load_source('wsgi', 'passenger_wsgi.py')`. The
+Application startup file is set to `passenger_wsgi.py`, so cPanel's stub is
+loading itself. Set it to `app.py` and press Restart.
 
 **If pip reports "Could not find a version that satisfies...".** A pinned
 version does not exist for this server's Python. The version list in the error
