@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Confirm your changes · LAIF Community{% endblock %}
+{% block content %}
+
+{% set labels = {
+  'name': 'Full name', 'email': 'Email address', 'phone': 'Phone number',
+  'address': 'Address', 'city': 'City', 'country': 'Country',
+  'skills': 'Skills or talents', 'bio': 'Short bio'
+} %}
+
+<div class="form-wrap">
+  <div class="eyebrow">Security check</div>
+  <h2>Enter your passcode</h2>
+  <p>We sent a {{ code_length }}-digit passcode to <strong>{{ masked }}</strong>. Enter it below to save your changes. Nothing is updated until you do.</p>
+
+  {% if preview %}
+    <div class="notice" style="margin-top:22px">
+      <strong>Development mode.</strong> No mail server is configured, so your passcode is shown here:
+      <span class="otp-preview">{{ preview }}</span>
+    </div>
+  {% endif %}
+
+  <div class="change-list">
+    <h3>Waiting to be saved</h3>
+    <ul>
+      {% for field, value in changes.items() %}
+        <li><span>{{ labels.get(field, field|capitalize) }}</span><strong>{{ value or '—' }}</strong></li>
+      {% endfor %}
+      {% if photo_pending %}<li><span>Profile picture</span><strong>New picture</strong></li>{% endif %}
+      {% if photo_removed %}<li><span>Profile picture</span><strong>Removed</strong></li>{% endif %}
+    </ul>
+  </div>
+
+  <form method="post">
+    <label for="code">Passcode</label>
+    <input id="code" name="code" class="otp-input" inputmode="numeric" pattern="[0-9]*" maxlength="{{ code_length }}"
+           autocomplete="one-time-code" autofocus required placeholder="000000">
+    <button class="btn" type="submit">Verify and save</button>
+  </form>
+
+  <p class="meta" style="margin-top:20px">
+    This passcode expires in about {{ (challenge.seconds_left / 60)|round(0, 'ceil')|int }} minute(s).
+  </p>
+
+  <div class="verify-actions">
+    <form method="post" action="{{ url_for('user.resend_passcode') }}">
+      <button class="btn outline small" type="submit">Send a new passcode</button>
+    </form>
+    <form method="post" action="{{ url_for('user.cancel_profile_change') }}">
+      <button class="btn small danger" type="submit">Discard changes</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

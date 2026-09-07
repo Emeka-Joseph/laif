@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Registered members · LAIF Admin{% endblock %}
+{% block content %}
+
+<section class="page-hero admin-hero">
+  <div class="container">
+    <div class="eyebrow">Admin dashboard</div>
+    <h1>Registered members.</h1>
+    <p>
+      Every account on the site: {{ member_count }} member{{ '' if member_count == 1 else 's' }}
+      and {{ admin_count }} administrator{{ '' if admin_count == 1 else 's' }}.
+      Open an account to see everything on file for it.
+    </p>
+    <div class="hero-actions">
+      <a class="btn outline" href="{{ url_for('admin.dashboard') }}">← Dashboard</a>
+      <a class="btn outline" href="{{ url_for('admin.codes') }}">Invitation codes</a>
+    </div>
+  </div>
+</section>
+
+<section class="section admin-section">
+  <div class="container">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Accounts</div>
+          <h2>
+            {{ members|length }} shown
+            {% if search or role != 'all' %}<span class="of-total">of {{ total }}</span>{% endif %}
+          </h2>
+        </div>
+
+        <form class="filter-bar" method="get" action="{{ url_for('admin.members') }}">
+          <input name="q" value="{{ search }}" placeholder="Search name, email, phone, skill…" aria-label="Search members">
+          <select name="role" aria-label="Filter by role">
+            <option value="all" {% if role == 'all' %}selected{% endif %}>Everyone</option>
+            <option value="member" {% if role == 'member' %}selected{% endif %}>Members</option>
+            <option value="admin" {% if role == 'admin' %}selected{% endif %}>Administrators</option>
+          </select>
+          <button class="btn small" type="submit">Search</button>
+          {% if search or role != 'all' %}
+            <a class="btn outline small" href="{{ url_for('admin.members') }}">Clear</a>
+          {% endif %}
+        </form>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table members-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Location</th>
+              <th>Role</th>
+              <th class="right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for member in members %}
+              <tr>
+                <td>
+                  <a class="person" href="{{ url_for('admin.member_detail', user_id=member.id) }}">
+                    <span class="member-avatar small">
+                      {% if member.photo %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ member.photo) }}" alt="">
+                      {% else %}
+                        <span>{{ member.initials }}</span>
+                      {% endif %}
+                    </span>
+                    <span class="person-body">
+                      <strong>{{ member.name }}</strong>
+                      {% if member.skill_list %}<em>{{ member.skill_list|join(', ') }}</em>{% endif %}
+                    </span>
+                  </a>
+                </td>
+                <td><a href="mailto:{{ member.email }}">{{ member.email }}</a></td>
+                <td>{% if member.phone %}<a href="tel:{{ member.phone }}">{{ member.phone }}</a>{% else %}<span class="none">—</span>{% endif %}</td>
+                <td>{{ member.location or '—' }}</td>
+                <td><span class="badge {{ member.role }}">{{ member.role }}</span></td>
+                <td class="right">
+                  <div class="row-actions">
+                    <a class="btn outline small" href="{{ url_for('admin.member_detail', user_id=member.id) }}">View</a>
+                    {% if member.role == 'admin' or member.id == current_user.id %}
+                      <button class="btn small danger" type="button" disabled
+                              title="Administrator accounts cannot be deleted here.">Delete</button>
+                    {% else %}
+                      <button class="btn small danger" type="submit" form="drop-member-{{ member.id }}">Delete</button>
+                    {% endif %}
+                  </div>
+                  {% if member.role != 'admin' and member.id != current_user.id %}
+                    <!-- Submitted by the Delete button above via its form attribute. -->
+                    <form id="drop-member-{{ member.id }}" method="post"
+                          action="{{ url_for('admin.delete_member', user_id=member.id) }}"
+                          onsubmit="return confirm('Delete {{ member.name }}’s account? Their profile, previous work and uploaded files are removed for good.')"></form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="6" class="empty">
+                  {% if search or role != 'all' %}No account matches that search.{% else %}No accounts yet.{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="panel-foot">
+        Passwords are stored only as a hash and are never shown anywhere in this panel.
+        A member who is locked out resets their own from the
+        <a href="{{ url_for('user.forgot_password') }}">forgot password</a> page.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

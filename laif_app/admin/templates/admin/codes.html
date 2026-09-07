@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Invitation codes · LAIF Admin{% endblock %}
+{% block content %}
+
+<section class="page-hero admin-hero">
+  <div class="container">
+    <div class="eyebrow">Admin dashboard</div>
+    <h1>Member invitation codes.</h1>
+    <p>One-time access codes for new members. Each is deleted automatically the moment it is used to sign up.</p>
+    <div class="hero-actions">
+      <a class="btn outline" href="{{ url_for('admin.dashboard') }}">← Dashboard</a>
+      <a class="btn outline" href="{{ url_for('admin.members') }}">Registered members</a>
+    </div>
+  </div>
+</section>
+
+<section class="section admin-section">
+  <div class="container admin-detail">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Active</div>
+          <h2>{{ codes|length }} unused code{{ '' if codes|length == 1 else 's' }}</h2>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Code</th><th>Issued</th></tr></thead>
+          <tbody>
+            {% for code in codes %}
+              <tr>
+                <td><strong>{{ code.code }}</strong></td>
+                <td>{{ code.created_at.strftime('%d %b %Y') }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="2" class="empty">No active codes. Generate some alongside.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <aside class="admin-detail-side">
+      <div class="side-card">
+        <div class="eyebrow">New codes</div>
+        <h3>Generate</h3>
+        <p class="dash-hint">Up to 25 at a time. Share one with each person you are inviting.</p>
+        <form method="post">
+          <label>Quantity<input name="quantity" type="number" value="1" min="1" max="25"></label>
+          <button class="btn" type="submit">Generate member codes</button>
+        </form>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+{% endblock %}

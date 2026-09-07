@@ -1,0 +1,51 @@
+{% extends "base.html" %}{% block title %}{{ post.title }} · LAIF Journal{% endblock %}
+{% block content %}
+
+<article class="section">
+  <div class="container" style="max-width:800px">
+    <div class="eyebrow">LAIF journal · {{ post.created_at.strftime('%d %b %Y') }}</div>
+    <h1 style="font-size:clamp(2.2rem,4.6vw,3.6rem);font-weight:500;margin:12px 0 14px">{{ post.title }}</h1>
+    <p class="meta">By {{ post.author.name }} · {{ post.likes }} like{{ '' if post.likes == 1 else 's' }}</p>
+
+    <img class="post-image" style="margin:34px 0" src="/images/{{ post.image or '4C4A3603.JPG' }}" alt="" decoding="async">
+
+    <p style="font-size:1.12rem;line-height:1.85;white-space:pre-line">{{ post.content }}</p>
+
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:38px;padding-top:26px;border-top:1px solid var(--line)">
+      <form method="post" action="{{ url_for('user.like_post',post_id=post.id) }}">
+        <button class="btn outline" type="submit" style="margin-top:0">♥ Like</button>
+      </form>
+      <span class="meta" style="margin-left:8px">Share</span>
+      <a class="btn outline" style="margin-top:0;padding:11px 18px" href="https://www.facebook.com/sharer/sharer.php?u={{ share_url|urlencode }}" target="_blank" rel="noopener">Facebook</a>
+      <a class="btn outline" style="margin-top:0;padding:11px 18px" href="https://wa.me/?text={{ (post.title + ' - ' + share_url)|urlencode }}" target="_blank" rel="noopener">WhatsApp</a>
+      <a class="btn outline" style="margin-top:0;padding:11px 18px" href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ share_url|urlencode }}" target="_blank" rel="noopener">X</a>
+    </div>
+  </div>
+</article>
+
+<section class="section tint" style="padding-top:0;margin-top:-1px">
+  <div class="container" style="max-width:800px">
+    <div class="form-wrap" style="margin-top:0">
+      <div class="eyebrow">Join the conversation</div>
+      <h2>{{ post.comments|length }} comment{{ '' if post.comments|length == 1 else 's' }}</h2>
+
+      {% for comment in post.comments %}
+      <div class="comment">
+        <strong>{{ comment.name }}</strong>
+        <div class="meta">{{ comment.created_at.strftime('%d %b %Y') }}</div>
+        <p>{{ comment.body }}</p>
+      </div>
+      {% endfor %}
+
+      <form method="post">
+        <label>Your name
+          {% if current_user %}<input value="{{ current_user.name }}" disabled>{% else %}<input name="name" required>{% endif %}
+        </label>
+        <label>Your comment<textarea name="body" required></textarea></label>
+        <button class="btn" type="submit">Post comment</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

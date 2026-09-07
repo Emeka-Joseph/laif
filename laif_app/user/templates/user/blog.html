@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% block title %}Journal · LAIF Community{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">The LAIF journal</div>
+    <h1>Words for your week.</h1>
+    <p>Encouragement, teaching and honest conversations from our pastors and leaders.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="post-list">
+      {% for post in posts %}
+      <article class="post-card">
+        <img src="/images/{{ post.image or '4C4A3603.JPG' }}" alt="" loading="lazy" decoding="async">
+        <div class="pad">
+          <div class="tag">From the family</div>
+          <h3>{{ post.title }}</h3>
+          <p>{{ post.excerpt }}</p>
+          <div class="meta" style="margin-bottom:18px">{{ post.author.name }} · {{ post.created_at.strftime('%d %b %Y') }}</div>
+          <a class="btn dark" href="{{ url_for('user.post_detail',post_id=post.id) }}">Read story →</a>
+        </div>
+      </article>
+      {% else %}
+      <div class="notice">The journal is just getting started — the first story will appear here soon.</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

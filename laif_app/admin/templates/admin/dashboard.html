@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard · LAIF{% endblock %}
+{% block content %}
+
+<section class="page-hero admin-hero">
+  <div class="container">
+    <div class="eyebrow">Admin dashboard</div>
+    <h1>Welcome, {{ current_user.name.split()[0] }}.</h1>
+    <p>Members, posts, resources, invitations and inquiries — all from one place.</p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('admin.members') }}">View all members</a>
+      <a class="btn outline" href="{{ url_for('admin.new_post') }}">+ New post</a>
+      <a class="btn outline" href="{{ url_for('admin.new_resource') }}">+ Add resource</a>
+      <a class="btn outline" href="{{ url_for('admin.codes') }}">Invitation codes</a>
+    </div>
+  </div>
+</section>
+
+<section class="section admin-section">
+  <div class="container">
+
+    <!-- ---------- At a glance ---------- -->
+    <div class="stat-row">
+      <a class="stat-tile" href="{{ url_for('admin.members') }}">
+        <span class="stat-value">{{ stats.members }}</span>
+        <span class="stat-label">Registered members</span>
+        <span class="stat-more">Manage →</span>
+      </a>
+      <div class="stat-tile">
+        <span class="stat-value">{{ stats.posts }}</span>
+        <span class="stat-label">Blog posts</span>
+      </div>
+      <div class="stat-tile">
+        <span class="stat-value">{{ stats.resources }}</span>
+        <span class="stat-label">Library resources</span>
+      </div>
+      <a class="stat-tile" href="{{ url_for('admin.codes') }}">
+        <span class="stat-value">{{ stats.codes }}</span>
+        <span class="stat-label">Unused invitation codes</span>
+        <span class="stat-more">Generate →</span>
+      </a>
+      <div class="stat-tile">
+        <span class="stat-value">{{ stats.messages }}</span>
+        <span class="stat-label">Contact inquiries</span>
+      </div>
+    </div>
+
+    <!-- ---------- Newest members ---------- -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Community</div>
+          <h2>Newest members</h2>
+        </div>
+        <a class="btn outline small" href="{{ url_for('admin.members') }}">View all members</a>
+      </div>
+
+      {% if recent_members %}
+        <div class="panel-body">
+          <ul class="people">
+            {% for member in recent_members %}
+              <li>
+                <a class="person" href="{{ url_for('admin.member_detail', user_id=member.id) }}">
+                  <span class="member-avatar">
+                    {% if member.photo %}
+                      <img src="{{ url_for('static', filename='uploads/' ~ member.photo) }}" alt="">
+                    {% else %}
+                      <span>{{ member.initials }}</span>
+                    {% endif %}
+                  </span>
+                  <span class="person-body">
+                    <strong>{{ member.name }}</strong>
+                    <span>{{ member.email }}</span>
+                    {% if member.location %}<em>{{ member.location }}</em>{% endif %}
+                  </span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% else %}
+        <div class="panel-body"><p class="empty">No members have signed up yet.</p></div>
+      {% endif %}
+    </div>
+
+    <!-- ---------- Posts ---------- -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Journal</div>
+          <h2>Blog posts</h2>
+        </div>
+        <a class="btn outline small" href="{{ url_for('admin.new_post') }}">+ New post</a>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Title</th><th>Author</th><th>Published</th><th class="right">Actions</th></tr></thead>
+          <tbody>
+            {% for post in posts %}
+              <tr>
+                <td><a href="{{ url_for('user.post_detail', post_id=post.id) }}">{{ post.title }}</a></td>
+                <td>{{ post.author.name }}</td>
+                <td>{{ post.created_at.strftime('%d %b %Y') }}</td>
+                <td class="right">
+                  <div class="row-actions">
+                    <a class="btn outline small" href="{{ url_for('admin.edit_post', post_id=post.id) }}">Edit</a>
+                    <button class="btn small danger" type="submit" form="drop-post-{{ post.id }}">Delete</button>
+                  </div>
+                  <!-- Submitted by the Delete button above via its form attribute. -->
+                  <form id="drop-post-{{ post.id }}" method="post"
+                        action="{{ url_for('admin.delete_post', post_id=post.id) }}"
+                        onsubmit="return confirm('Delete “{{ post.title }}”?')"></form>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4" class="empty">No posts yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ---------- Inquiries ---------- -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Inbox</div>
+          <h2>Recent contact inquiries</h2>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Name</th><th>Email</th><th>Message</th><th>Received</th></tr></thead>
+          <tbody>
+            {% for message in messages %}
+              <tr>
+                <td>{{ message.name }}</td>
+                <td><a href="mailto:{{ message.email }}">{{ message.email }}</a></td>
+                <td>{{ message.message[:90] }}{% if message.message|length > 90 %}…{% endif %}</td>
+                <td>{{ message.created_at.strftime('%d %b %Y') }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4" class="empty">No inquiries yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

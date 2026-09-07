@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{ work.title }} · {{ member.name }} · LAIF Community{% endblock %}
+{% block description %}{{ work.summary or work.title ~ ' — previous work by ' ~ member.name ~ ' in the LAIF Community talent directory.' }}{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">Previous work</div>
+    <h1>{{ work.title }}</h1>
+    {% if work.meta_line %}<p class="work-hero-meta">{{ work.meta_line }}</p>{% endif %}
+    {% if work.summary %}<p>{{ work.summary }}</p>{% endif %}
+    <div class="hero-actions">
+      <a class="btn outline" href="{{ url_for('user.member_profile', user_id=member.id) }}">← {{ member.name }}'s profile</a>
+      {% if current_user and current_user.id == member.id %}
+        <a class="btn outline" href="{{ url_for('user.edit_work', work_id=work.id) }}">Edit this work</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container work-detail">
+
+    <div class="work-detail-main">
+      {% if items %}
+        <div class="gallery showcase" data-lightbox>
+          {% for item in items %}
+            {% set src = url_for('static', filename='uploads/' ~ item.filename) %}
+            <figure class="tile">
+              <button type="button" class="tile-open"
+                      data-kind="{{ item.kind }}"
+                      data-src="{{ src }}"
+                      data-title="{{ item.title or work.title }}"
+                      data-caption="{{ item.description }}"
+                      aria-label="Open {{ item.title or work.title }}">
+                {% if item.is_video %}
+                  <video src="{{ src }}" muted playsinline preload="metadata"></video>
+                  <span class="tile-badge">▶ Video</span>
+                {% else %}
+                  <img src="{{ src }}" alt="{{ item.title or work.title }}" loading="lazy">
+                {% endif %}
+              </button>
+              {% if item.title or item.description %}
+                <figcaption class="tile-caption">
+                  {% if item.title %}<strong>{{ item.title }}</strong>{% endif %}
+                  {% if item.description %}<span>{{ item.description }}</span>{% endif %}
+                </figcaption>
+              {% endif %}
+            </figure>
+          {% endfor %}
+        </div>
+        <p class="dash-hint" style="margin-top:16px">Click any photo or clip to open it full size.</p>
+      {% else %}
+        <div class="notice">No pictures have been added to this piece of work yet.</div>
+      {% endif %}
+
+      {% if work.description %}
+        <div class="work-story">
+          <h2>About this work</h2>
+          {% for paragraph in work.description.split('\n') %}
+            {% if paragraph.strip() %}<p>{{ paragraph }}</p>{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <aside class="work-detail-side">
+      {% if links %}
+        <div class="side-card">
+          <div class="eyebrow">Browse further</div>
+          <h3>Websites &amp; social media</h3>
+          <ul class="link-chips">
+            {% for link in links %}
+              <li>
+                <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">
+                  <strong>{{ link.display }}</strong><span>{{ link.host }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <div class="side-card">
+        <div class="eyebrow">Done by</div>
+        <a class="side-member" href="{{ url_for('user.member_profile', user_id=member.id) }}">
+          <span class="member-avatar">
+            {% if member.photo %}
+              <img src="{{ url_for('static', filename='uploads/' ~ member.photo) }}" alt="{{ member.name }}">
+            {% else %}
+              <span>{{ member.initials }}</span>
+            {% endif %}
+          </span>
+          <span>
+            <strong>{{ member.name }}</strong>
+            {% if member.location %}<em>{{ member.location }}</em>{% endif %}
+          </span>
+        </a>
+        <div class="profile-contact stacked">
+          {% if member.phone %}<span>📞 <a href="tel:{{ member.phone }}">{{ member.phone }}</a></span>{% endif %}
+          <span>✉ <a href="mailto:{{ member.email }}">{{ member.email }}</a></span>
+        </div>
+      </div>
+
+      {% if previous or following %}
+        <div class="side-card">
+          <div class="eyebrow">More from {{ member.name.split()[0] }}</div>
+          <ul class="work-nav">
+            {% if previous %}
+              <li><a href="{{ url_for('user.member_work', user_id=member.id, work_id=previous.id) }}">← {{ previous.title }}</a></li>
+            {% endif %}
+            {% if following %}
+              <li><a href="{{ url_for('user.member_work', user_id=member.id, work_id=following.id) }}">{{ following.title }} →</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      {% endif %}
+    </aside>
+
+  </div>
+</section>
+
+{% endblock %}

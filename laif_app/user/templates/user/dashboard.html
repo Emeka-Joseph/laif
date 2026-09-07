@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}My dashboard · LAIF Community{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">Your account</div>
+    <h1>Hello, {{ user.name.split()[0] }}.</h1>
+    <p>Keep your details current and show the community the work you do.</p>
+    <a class="btn outline" href="{{ url_for('user.member_profile', user_id=user.id) }}">View my public profile</a>
+  </div>
+</section>
+
+{% if pending %}
+<div class="container">
+  <div class="notice" style="margin-top:34px">
+    <strong>A change is waiting for verification.</strong>
+    You asked to update your profile but the passcode has not been entered yet.
+    <a href="{{ url_for('user.verify_profile') }}">Enter it now</a> to save the change.
+  </div>
+</div>
+{% endif %}
+
+<section class="section">
+  <div class="container dash-grid">
+
+    <!-- ---------- Profile ---------- -->
+    <div class="dash-card">
+      <div class="eyebrow">Profile</div>
+      <h2 class="dash-title">Your details</h2>
+      <p class="dash-hint">Changes are confirmed with a one-time passcode sent to your email before anything is saved.</p>
+
+      <form method="post" action="{{ url_for('user.update_profile') }}" enctype="multipart/form-data">
+        <div class="avatar-row">
+          <div class="avatar-preview">
+            {% if user.photo %}
+              <img id="avatar-image" src="{{ url_for('static', filename='uploads/' ~ user.photo) }}" alt="Your profile picture">
+            {% else %}
+              <img id="avatar-image" hidden alt="Your profile picture">
+              <span class="avatar-initials" id="avatar-initials">{{ user.initials }}</span>
+            {% endif %}
+          </div>
+          <div class="avatar-controls">
+            <label for="photo">Profile picture</label>
+            <input id="photo" name="photo" type="file" accept="image/*" data-preview="avatar-image">
+            <p class="dash-hint">JPG, PNG, WebP or GIF, up to 8MB.</p>
+            {% if user.photo %}
+              <label class="check"><input type="checkbox" name="remove_photo" value="1"> Remove my current picture</label>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <label>Full name<input name="name" value="{{ user.name }}" required></label>
+          <label>Email address<input name="email" type="email" value="{{ user.email }}" required></label>
+          <label>Phone number<input name="phone" type="tel" value="{{ user.phone or '' }}" placeholder="+965 0000 0000"></label>
+          <label>City<input name="city" value="{{ user.city or '' }}" placeholder="Kuwait City"></label>
+          <label>Country<input name="country" value="{{ user.country or '' }}" placeholder="Kuwait"></label>
+          <label>Skills or talents<input name="skills" value="{{ user.skills or '' }}" placeholder="Photography, Catering, Music"></label>
+        </div>
+
+        <label>Address<input name="address" value="{{ user.address or '' }}" placeholder="Street, block, building"></label>
+        <label>Short bio<textarea name="bio" placeholder="Tell the community about your work.">{{ user.bio or '' }}</textarea></label>
+
+        <button class="btn" type="submit">Save changes</button>
+      </form>
+
+      <hr class="rule">
+
+      <div class="eyebrow">Find me online</div>
+      <h2 class="dash-title">Websites &amp; social media</h2>
+      <p class="dash-hint">
+        Your own handles, shown at the top of your public profile — separate from the links you
+        attach to a single piece of work. {{ member_links|length }} of {{ max_member_links }} added.
+        These save straight away; no passcode needed.
+      </p>
+
+      {% if member_links %}
+        <ul class="link-list">
+          {% for link in member_links %}
+            <li>
+              <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">
+                <strong>{{ link.display }}</strong><span>{{ link.url }}</span>
+              </a>
+              <form method="post" action="{{ url_for('user.delete_member_link', link_id=link.id) }}">
+                <button class="btn small danger" type="submit">Remove</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if member_links|length < max_member_links %}
+        <form method="post" action="{{ url_for('user.add_member_link') }}">
+          <fieldset class="link-fields" data-repeat="{{ max_member_links - member_links|length }}">
+            <div class="link-row repeat-row">
+              <label>Label<input name="link_label" maxlength="80" placeholder="e.g. Instagram"></label>
+              <label>Address<input name="link_url" maxlength="500" placeholder="instagram.com/your-handle"></label>
+            </div>
+            <!-- Revealed by JS; without it the single row above still submits. -->
+            <button class="btn outline small" type="button" data-repeat-add hidden>+ Add another link</button>
+          </fieldset>
+          <button class="btn outline" type="submit">Save link</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <!-- ---------- Previous work ---------- -->
+    <div class="dash-card">
+      <div class="eyebrow">Portfolio</div>
+      <h2 class="dash-title">Previous work</h2>
+      <p class="dash-hint">
+        Every job you have done gets its own entry, with as many pictures as you like and links
+        out to a website or social media handle. Visitors open one from your public profile.
+        {{ works|length }} of {{ max_works }} listed · {{ media_used }} of {{ max_items }} files used.
+      </p>
+
+      {% if works|length < max_works %}
+        <details class="adder">
+          <summary class="btn add-new">+ Add new work</summary>
+          <form method="post" action="{{ url_for('user.add_work') }}" enctype="multipart/form-data">
+            <label>Title<input name="title" maxlength="200" required placeholder="e.g. Wedding shoot, Al Bidaa"></label>
+            <div class="field-grid">
+              <label>Client or venue<input name="client" maxlength="160" placeholder="Optional"></label>
+              <label>When<input name="done_on" maxlength="80" placeholder="e.g. March 2026"></label>
+            </div>
+            <label>Short summary<input name="summary" maxlength="400" placeholder="One line shown on the tile."></label>
+            <label>Full details<textarea name="description" style="min-height:110px" placeholder="What the job involved, what you delivered, anything a future client should know."></textarea></label>
+            <label>Pictures or short clips<input name="media" type="file" accept="image/*,video/*" multiple></label>
+            <p class="dash-hint">Choose as many as you like now — you can add more afterwards. Images up to 8MB, videos up to 60MB.</p>
+
+            <fieldset class="link-fields" data-repeat="{{ max_links }}">
+              <legend>Websites &amp; social media</legend>
+              <p class="dash-hint">
+                Where a visitor can see more of this job — your website, Instagram, Facebook,
+                YouTube, TikTok, WhatsApp. Leave blank if there is nowhere to send them.
+              </p>
+              <div class="link-row repeat-row">
+                <label>Label<input name="link_label" maxlength="80" placeholder="e.g. Instagram"></label>
+                <label>Address<input name="link_url" maxlength="500" placeholder="instagram.com/your-handle"></label>
+              </div>
+              <!-- Revealed by JS; without it the single row above still submits. -->
+              <button class="btn outline small" type="button" data-repeat-add hidden>+ Add another link</button>
+            </fieldset>
+
+            <button class="btn" type="submit">Create this work</button>
+          </form>
+        </details>
+      {% else %}
+        <div class="notice" style="margin-top:20px">
+          You have reached {{ max_works }} pieces of work. Remove one to add another.
+        </div>
+      {% endif %}
+
+      {% if works %}
+        <div class="work-list">
+          {% for work in works %}
+            <article class="work-row">
+              <a class="work-thumb" href="{{ url_for('user.edit_work', work_id=work.id) }}">
+                {% if work.cover %}
+                  {% set src = url_for('static', filename='uploads/' ~ work.cover.filename) %}
+                  {% if work.cover.is_video %}
+                    <video src="{{ src }}" muted playsinline preload="metadata"></video>
+                  {% else %}
+                    <img src="{{ src }}" alt="{{ work.title }}" loading="lazy">
+                  {% endif %}
+                {% else %}
+                  <span class="work-thumb-empty">No picture yet</span>
+                {% endif %}
+              </a>
+              <div class="work-row-body">
+                <h3><a href="{{ url_for('user.edit_work', work_id=work.id) }}">{{ work.title }}</a></h3>
+                {% if work.meta_line %}<p class="work-meta">{{ work.meta_line }}</p>{% endif %}
+                {% if work.summary %}<p class="work-summary">{{ work.summary }}</p>{% endif %}
+                <p class="work-counts">
+                  {{ work.items|length }} picture{{ '' if work.items|length == 1 else 's' }}
+                  · {{ work.links|length }} link{{ '' if work.links|length == 1 else 's' }}
+                </p>
+                {% if work.links %}
+                  <ul class="link-pills">
+                    {% for link in work.links %}
+                      <li><a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.display }}</a></li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+                <div class="tile-actions">
+                  <a class="btn outline small" href="{{ url_for('user.edit_work', work_id=work.id) }}">Manage</a>
+                  <a class="btn outline small" href="{{ url_for('user.member_work', user_id=user.id, work_id=work.id) }}">Preview</a>
+                  <button class="btn small danger" type="submit" form="drop-work-{{ work.id }}">Delete</button>
+                </div>
+              </div>
+              <!-- Submitted by the Delete button above via its form attribute. -->
+              <form id="drop-work-{{ work.id }}" method="post"
+                    action="{{ url_for('user.delete_work', work_id=work.id) }}"
+                    onsubmit="return confirm('Delete this piece of work and all of its pictures?')"></form>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="notice" style="margin-top:26px">
+          You have not listed any work yet. Use <strong>Add new work</strong> above to describe your
+          first job, then add its pictures and links.
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

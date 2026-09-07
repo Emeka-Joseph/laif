@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Skills &amp; talents · LAIF Community{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">The people make the place</div>
+    <h1>Meet the talent in our family.</h1>
+    <p>Discover the gifts, skills and businesses represented in the LAIF community.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Community directory</h2>
+      {% if current_user %}
+        <a class="btn" href="{{ url_for('user.dashboard') }}">My dashboard</a>
+      {% else %}
+        <a class="btn" href="{{ url_for('user.signup') }}">Add your profile</a>
+      {% endif %}
+    </div>
+
+    <div class="cards">
+      {% for member in members %}
+        <a class="card member-card" href="{{ url_for('user.member_profile', user_id=member.id) }}">
+          <div class="member-avatar">
+            {% if member.photo %}
+              <img src="{{ url_for('static', filename='uploads/' ~ member.photo) }}" alt="{{ member.name }}" loading="lazy">
+            {% else %}
+              <span>{{ member.initials }}</span>
+            {% endif %}
+          </div>
+          <div class="eyebrow">{{ member.skills or "Member" }}</div>
+          <h3>{{ member.name }}</h3>
+          <p>{{ member.bio or "A valued member of the LAIF family." }}</p>
+          <span class="member-meta">
+            {% if member.portfolio %}{{ member.portfolio|length }} item(s) of work{% else %}View profile{% endif %}
+          </span>
+        </a>
+      {% else %}
+        <div class="notice">The directory is just getting started. Sign up to be one of the first profiles.</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ member.name }} · LAIF Admin{% endblock %}
+{% block content %}
+
+<section class="page-hero admin-hero">
+  <div class="container profile-head">
+    <div class="profile-avatar">
+      {% if member.photo %}
+        <img src="{{ url_for('static', filename='uploads/' ~ member.photo) }}" alt="{{ member.name }}">
+      {% else %}
+        <span>{{ member.initials }}</span>
+      {% endif %}
+    </div>
+    <div>
+      <div class="eyebrow">Account #{{ member.id }}</div>
+      <h1>{{ member.name }}</h1>
+      <p><span class="badge {{ member.role }}">{{ member.role }}</span></p>
+      <div class="hero-actions">
+        <a class="btn outline" href="{{ url_for('admin.members') }}">← All members</a>
+        {% if member.role != 'admin' %}
+          <a class="btn outline" href="{{ url_for('user.member_profile', user_id=member.id) }}">Public profile</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section admin-section">
+  <div class="container admin-detail">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">On file</div>
+          <h2>Account details</h2>
+        </div>
+      </div>
+      <div class="panel-body">
+        <dl class="detail-list">
+          <div><dt>Full name</dt><dd>{{ member.name }}</dd></div>
+          <div><dt>Email address</dt><dd><a href="mailto:{{ member.email }}">{{ member.email }}</a></dd></div>
+          <div><dt>Phone number</dt><dd>{% if member.phone %}<a href="tel:{{ member.phone }}">{{ member.phone }}</a>{% else %}<span class="none">Not given</span>{% endif %}</dd></div>
+          <div><dt>Address</dt><dd>{{ member.address or '' }}{% if not member.address %}<span class="none">Not given</span>{% endif %}</dd></div>
+          <div><dt>City</dt><dd>{{ member.city or '' }}{% if not member.city %}<span class="none">Not given</span>{% endif %}</dd></div>
+          <div><dt>Country</dt><dd>{{ member.country or '' }}{% if not member.country %}<span class="none">Not given</span>{% endif %}</dd></div>
+          <div><dt>Skills &amp; talents</dt><dd>{{ member.skills or '' }}{% if not member.skills %}<span class="none">None listed</span>{% endif %}</dd></div>
+          <div><dt>Role</dt><dd><span class="badge {{ member.role }}">{{ member.role }}</span></dd></div>
+          <div><dt>Password</dt><dd><span class="none">Stored as a hash — never shown</span></dd></div>
+        </dl>
+
+        {% if member.bio %}
+          <div class="detail-bio">
+            <dt>Short bio</dt>
+            <p>{{ member.bio }}</p>
+          </div>
+        {% endif %}
+
+        {% if links %}
+          <div class="detail-bio">
+            <dt>Websites &amp; social media</dt>
+            <ul class="link-pills">
+              {% for link in links %}
+                <li><a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.display }}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <aside class="admin-detail-side">
+      <div class="side-card">
+        <div class="eyebrow">Portfolio</div>
+        <h3>Previous work</h3>
+        <p class="dash-hint">
+          {{ works|length }} piece{{ '' if works|length == 1 else 's' }} of work ·
+          {{ media_count }} file{{ '' if media_count == 1 else 's' }} uploaded
+        </p>
+        {% if works %}
+          <ul class="work-nav">
+            {% for work in works %}
+              <li><a href="{{ url_for('user.member_work', user_id=member.id, work_id=work.id) }}">{{ work.title }}</a></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="side-card danger-card">
+        <div class="eyebrow">Danger zone</div>
+        <h3>Delete this account</h3>
+        {% if blocker %}
+          <p class="dash-hint">{{ blocker }}</p>
+          <button class="btn small danger" type="button" disabled>Delete account</button>
+        {% else %}
+          <p class="dash-hint">
+            Removes the profile, all {{ works|length }} piece{{ '' if works|length == 1 else 's' }}
+            of previous work, every uploaded file and their profile picture. This cannot be undone.
+          </p>
+          <form method="post" action="{{ url_for('admin.delete_member', user_id=member.id) }}"
+                onsubmit="return confirm('Delete {{ member.name }}’s account? Everything they uploaded is removed for good.')">
+            <button class="btn danger" type="submit">Delete account</button>
+          </form>
+        {% endif %}
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+{% endblock %}

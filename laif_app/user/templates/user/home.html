@@ -1,0 +1,118 @@
+{% extends "base.html" %}{% block title %}LAIF Community · A place to belong{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="hero-grid">
+    <div class="hero-panel">
+      <div class="eyebrow">Life Abundant International Fountain</div>
+      <h1>Faith that feels like <em>family</em>.</h1>
+      <p>A vibrant, Christ-centred community in Kuwait City helping people discover abundant life, build meaningful relationships and live with purpose.</p>
+      <div class="hero-actions">
+        <a class="btn" href="{{ url_for('user.contact') }}">Plan your visit</a>
+        <a class="btn outline" href="{{ url_for('user.live') }}">Watch live</a>
+      </div>
+    </div>
+    <div class="hero-media">
+      <img src="/images/4C4A3475.JPG" alt="The LAIF church family at the 15th Annual Convention" fetchpriority="high" decoding="async">
+    </div>
+  </div>
+</section>
+
+<div class="hero-strip">
+  <div class="container">
+    <div class="inner">
+      <div class="cell"><strong>Friday · 8:30 AM</strong><span>Fellowship Hall</span></div>
+      <div class="cell"><strong>Friday · 9:00 AM</strong><span>Hall of Love</span></div>
+      <div class="cell"><strong>Friday · Shiloh Hour</strong><span>Hall of Faith</span></div>
+      <div class="cell"><strong>Sunday · 7:30 AM</strong><span>Hall of Faith</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container split">
+    <div>
+      <div class="eyebrow">Welcome home</div>
+      <h2>There is a place for you here.</h2>
+      <p class="intro">From the first hello to the deepest conversations, LAIF is a safe place to grow in faith and in life. Come as you are; leave encouraged, equipped and connected.</p>
+      <p class="intro">We are a Bible-believing, Spirit-filled family drawn from many nations — worshipping together at the NECK Compound in Kuwait City since 2010.</p>
+      <a class="btn dark" href="{{ url_for('user.about') }}">Discover LAIF</a>
+    </div>
+    <div class="photo-stack">
+      <img src="/images/4C4A3651.JPG" alt="LAIF gathering" loading="lazy" decoding="async">
+      <img src="/images/pastor_Zinny.JPG" alt="Pastor Dr. Zinny Njoku" loading="lazy" decoding="async">
+      <img src="/images/4C4A3644.JPG" alt="Members of the church family" loading="lazy" decoding="async">
+    </div>
+  </div>
+</section>
+
+<section class="scripture" style="background-image:url('/images/4C4A3603.JPG')">
+  <div class="container">
+    <blockquote>Go ye therefore, and teach all nations.</blockquote>
+    <cite>Matthew 28:19 · Our mission</cite>
+  </div>
+</section>
+
+<section class="section tint">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">A rhythm of grace</div>
+        <h2>Join us this week</h2>
+      </div>
+      <p class="intro">Power-packed services every Friday and Sunday at the NECK Compound, Kuwait City. Call or SMS +965 6633 2846 to register for a training class.</p>
+    </div>
+    <div class="cards">
+      <div class="card service-card"><strong>Friday · 8:30 AM</strong><h3>Fellowship Hall</h3><p>Early morning fellowship and worship to start your weekend right.</p></div>
+      <div class="card service-card"><strong>Friday · 9:00 AM</strong><h3>Hall of Love</h3><p>Our main Friday celebration service — worship, the Word and ministry.</p></div>
+      <div class="card service-card"><strong>Friday · Shiloh Hour</strong><h3>Hall of Faith</h3><p>A night of prayer, encounter and breakthrough for the LAIF family.</p></div>
+      <div class="card service-card"><strong>Sunday · 7:30 AM</strong><h3>Hall of Faith</h3><p>Sunday celebration service — a power-packed time of worship and the Word.</p></div>
+      <div class="card service-card"><strong>Ongoing</strong><h3>Trainings</h3><p>Foundation Class, Believers Class, Discipleship Class, Evangelism and Missionary Training, Ministerial Training and Bible School.</p></div>
+      <div class="card service-card"><strong>Every week</strong><h3>Cell groups</h3><p>Sunday Cell, Shiloh Cell, Children Cell and Online Members Cell — small groups for fellowship and growth.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Moments together</div>
+        <h2>Life at LAIF</h2>
+      </div>
+      <p class="intro">Many stories, one beautiful community — conventions, children's church, worship and the everyday moments in between.</p>
+    </div>
+    <div class="slider">
+      {% for item in gallery %}
+      <div class="slide {% if loop.first %}active{% endif %}">
+        <img src="/images/{{ item.file }}" alt="{{ item.caption }}" loading="{% if loop.first %}eager{% else %}lazy{% endif %}" decoding="async">
+        <div class="slide-copy">
+          <div class="eyebrow">Our family</div>
+          <h3>{{ item.caption }}</h3>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="dots">{% for item in gallery %}<span class="dot {% if loop.first %}active{% endif %}"></span>{% endfor %}</div>
+  </div>
+</section>
+
+<section class="section dark">
+  <div class="container split">
+    <div>
+      <div class="eyebrow">Come as you are</div>
+      <h2>Your first visit starts with hello.</h2>
+      <p class="intro">Tell us you are coming and someone from our welcome team will look out for you, save you a seat and help you find your way around.</p>
+    </div>
+    <div>
+      <div class="card">
+        <h3>NECK Compound, Kuwait City</h3>
+        <p>National Evangelical Church Kuwait (NECK) Compound, Kuwait City, Kuwait.</p>
+        <p>Phone / WhatsApp · +965 6633 2846<br>laifoffice2020@gmail.com</p>
+        <a class="btn" href="{{ url_for('user.contact') }}">Plan your visit</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

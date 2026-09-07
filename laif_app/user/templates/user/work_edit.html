@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}{{ work.title }} · My previous work{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">Previous work</div>
+    <h1>{{ work.title }}</h1>
+    <p>Add as many pictures as you need, and links to a website or social media handle so visitors can browse further.</p>
+    <div class="hero-actions">
+      <a class="btn outline" href="{{ url_for('user.dashboard') }}">Back to dashboard</a>
+      <a class="btn outline" href="{{ url_for('user.member_work', user_id=user.id, work_id=work.id) }}">See how visitors view it</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container dash-grid">
+
+    <!-- ---------- Details ---------- -->
+    <div class="dash-card">
+      <div class="eyebrow">Details</div>
+      <h2 class="dash-title">About this job</h2>
+      <p class="dash-hint">The title and summary appear on the tile; the full details open when a visitor clicks it.</p>
+
+      <form method="post" action="{{ url_for('user.update_work', work_id=work.id) }}">
+        <label>Title<input name="title" maxlength="200" value="{{ work.title }}" required></label>
+        <div class="field-grid">
+          <label>Client or venue<input name="client" maxlength="160" value="{{ work.client or '' }}" placeholder="Optional"></label>
+          <label>When<input name="done_on" maxlength="80" value="{{ work.done_on or '' }}" placeholder="e.g. March 2026"></label>
+        </div>
+        <label>Short summary<input name="summary" maxlength="400" value="{{ work.summary or '' }}" placeholder="One line shown on the tile."></label>
+        <label>Full details<textarea name="description" style="min-height:150px" placeholder="What the job involved and what you delivered.">{{ work.description or '' }}</textarea></label>
+        <button class="btn" type="submit">Save details</button>
+      </form>
+
+      <hr class="rule">
+
+      <div class="eyebrow">Links</div>
+      <h2 class="dash-title">Websites &amp; social media</h2>
+      <p class="dash-hint">
+        Anywhere a visitor can see more of this job — your website, Instagram, Facebook, YouTube,
+        WhatsApp. {{ links|length }} of {{ max_links }} added.
+      </p>
+
+      {% if links %}
+        <ul class="link-list">
+          {% for link in links %}
+            <li>
+              <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">
+                <strong>{{ link.display }}</strong><span>{{ link.url }}</span>
+              </a>
+              <form method="post" action="{{ url_for('user.delete_work_link', link_id=link.id) }}">
+                <button class="btn small danger" type="submit">Remove</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if links|length < max_links %}
+        <form method="post" action="{{ url_for('user.add_work_link', work_id=work.id) }}">
+          <fieldset class="link-fields" data-repeat="{{ max_links - links|length }}">
+            <div class="link-row repeat-row">
+              <label>Label<input name="link_label" maxlength="80" placeholder="e.g. Instagram"></label>
+              <label>Address<input name="link_url" maxlength="500" placeholder="instagram.com/your-handle"></label>
+            </div>
+            <!-- Revealed by JS; without it the single row above still submits. -->
+            <button class="btn outline small" type="button" data-repeat-add hidden>+ Add another link</button>
+          </fieldset>
+          <button class="btn outline" type="submit">Save link</button>
+        </form>
+      {% endif %}
+    </div>
+
+    <!-- ---------- Pictures ---------- -->
+    <div class="dash-card">
+      <div class="eyebrow">Gallery</div>
+      <h2 class="dash-title">Pictures &amp; clips</h2>
+      <p class="dash-hint">{{ items|length }} of {{ max_media }} used for this job.</p>
+
+      {% if items|length < max_media %}
+        <details class="adder" {% if not items %}open{% endif %}>
+          <summary class="btn add-new">+ Add new image</summary>
+          <form method="post" action="{{ url_for('user.add_work_media', work_id=work.id) }}" enctype="multipart/form-data">
+            <label>Choose photos or short clips<input name="media" type="file" accept="image/*,video/*" multiple required></label>
+            <p class="dash-hint">Pick several at once if you like. Images up to 8MB, videos up to 60MB (MP4, WebM or MOV).</p>
+            <button class="btn" type="submit">Upload</button>
+          </form>
+        </details>
+      {% else %}
+        <div class="notice" style="margin-top:20px">
+          This job holds the maximum of {{ max_media }} files. Remove one to add another.
+        </div>
+      {% endif %}
+
+      {% if items %}
+        <div class="gallery" data-lightbox>
+          {% for item in items %}
+            {% set src = url_for('static', filename='uploads/' ~ item.filename) %}
+            <figure class="tile">
+              <button type="button" class="tile-open"
+                      data-kind="{{ item.kind }}"
+                      data-src="{{ src }}"
+                      data-title="{{ item.title or work.title }}"
+                      data-caption="{{ item.description }}"
+                      aria-label="Open {{ item.title or 'picture' }}">
+                {% if item.is_video %}
+                  <video src="{{ src }}" muted playsinline preload="metadata"></video>
+                  <span class="tile-badge">▶ Video</span>
+                {% else %}
+                  <img src="{{ src }}" alt="{{ item.title or work.title }}" loading="lazy">
+                {% endif %}
+              </button>
+              <figcaption>
+                <form method="post" action="{{ url_for('user.edit_portfolio_item', item_id=item.id) }}">
+                  <input name="title" value="{{ item.title }}" placeholder="Add a caption" aria-label="Caption">
+                  <input name="description" value="{{ item.description }}" placeholder="Add a description" aria-label="Description">
+                  <div class="tile-actions">
+                    <button class="btn outline small" type="submit">Save caption</button>
+                    <button class="btn small danger" type="submit" form="remove-{{ item.id }}">Remove</button>
+                  </div>
+                </form>
+                <!-- Submitted by the button above via its form attribute. -->
+                <form id="remove-{{ item.id }}" method="post"
+                      action="{{ url_for('user.delete_portfolio_item', item_id=item.id) }}"
+                      onsubmit="return confirm('Remove this picture?')"></form>
+              </figcaption>
+            </figure>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="notice" style="margin-top:26px">
+          No pictures yet. The first photo you add becomes the tile visitors see on your profile.
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
