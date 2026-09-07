@@ -1,5 +1,7 @@
+from flask import current_app
 from sqlalchemy import inspect, text
 
+from config import DEFAULT_ADMIN_PASSWORD
 from laif_app.extensions import db
 from laif_app.models import PortfolioItem, PortfolioWork, Post, Resource, User
 
@@ -60,9 +62,18 @@ def seed():
     sync_columns()
     backfill_works()
     if not User.query.filter_by(role="admin").first():
-        admin_user = User(name="LAIF Administrator", email="admin@laifcommunity.org", role="admin")
-        admin_user.set_password("ChangeMe123!")
+        admin_user = User(
+            name="LAIF Administrator",
+            email=current_app.config["ADMIN_EMAIL"],
+            role="admin",
+        )
+        admin_user.set_password(current_app.config["ADMIN_PASSWORD"])
         db.session.add(admin_user)
+        if current_app.config["ADMIN_PASSWORD"] == DEFAULT_ADMIN_PASSWORD:
+            current_app.logger.warning(
+                "Seeded the administrator with the published default password. "
+                "Set LAIF_ADMIN_PASSWORD and change it before this site is public."
+            )
     if not Resource.query.first():
         db.session.add_all([
             Resource(title="Rooted in Grace", category="E-books", description="A 21-day devotional for growing deeper in God."),

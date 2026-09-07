@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import current_app, flash, redirect, render_template, request, send_from_directory, session, url_for
 
@@ -12,6 +12,7 @@ from config import (
     MAX_WORK_MEDIA,
     OTP_LENGTH,
     OTP_RESEND_SECONDS,
+    RESET_TTL_MINUTES,
     RESOURCE_CATEGORIES,
     UPLOAD_DIR,
 )
@@ -192,23 +193,53 @@ def login():
 
 @user_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
+    """Mail a reset link out; never put it on the page for a stranger."""
     if request.method == "POST":
         user = User.query.filter_by(email=request.form.get("email", "").lower().strip()).first()
+        preview = None
         if user:
             user.reset_token = secrets.token_urlsafe(32)
+            user.reset_sent_at = datetime.utcnow()
             db.session.commit()
-            flash("Your reset link is ready below.", "success")
-            return render_template("user/forgot.html", reset_url=url_for("user.reset_password", token=user.reset_token, _external=True))
-        flash("If that email is registered, a reset link will be available shortly.", "info")
+            link = url_for("user.reset_password", token=user.reset_token, _external=True)
+            sent = otp.send_reset_link(user, link)
+            if not sent:
+                current_app.logger.warning("Reset link for %s could not be mailed.", user.email)
+                # Only a development build, with no mail server wired up, puts
+                # the link on screen.
+                if current_app.config.get("OTP_SHOW_IN_UI"):
+                    preview = link
+        # The same answer whether or not the address is registered, so the form
+        # cannot be used to discover who holds an account.
+        flash(
+            "If that email is registered, a reset link is on its way. "
+            f"It stops working in {RESET_TTL_MINUTES} minutes.",
+            "info",
+        )
+        return render_template("user/forgot.html", reset_url=preview)
     return render_template("user/forgot.html")
 
 
 @user_bp.route("/reset-password/<token>", methods=["GET", "POST"])
 def reset_password(token):
     user = User.query.filter_by(reset_token=token).first_or_404()
+
+    expired = not user.reset_sent_at or user.reset_sent_at < datetime.utcnow() - timedelta(
+        minutes=RESET_TTL_MINUTES
+    )
+    if expired:
+        flash("That reset link has expired. Please ask for a new one.", "error")
+        return redirect(url_for("user.forgot_password"))
+
     if request.method == "POST":
-        user.set_password(request.form.get("password", ""))
+        password = request.form.get("password", "")
+        if len(password) < 8:
+            flash("Please choose a password of at least 8 characters.", "error")
+            return redirect(url_for("user.reset_password", token=token))
+        user.set_password(password)
+        # Spend the token so the link cannot be replayed from an inbox later.
         user.reset_token = None
+        user.reset_sent_at = None
         db.session.commit()
         flash("Your password has been updated. Please sign in.", "success")
         return redirect(url_for("user.login"))
@@ -260,6 +291,14 @@ def _discard_pending(user):
         delete_upload(challenge.payload.get("photo"))
         db.session.delete(challenge)
     db.session.commit()
+
+
+# Shown when the mail server would not take the message. Saying so beats a
+# cheerful "check your inbox" for a passcode that is never going to arrive.
+_UNDELIVERED = (
+    "We could not email your passcode just now. Please try again in a moment, "
+    "or contact the church office if it keeps failing."
+)
 
 
 def _deliver(user, challenge, code):
@@ -327,9 +366,12 @@ def update_profile():
     _discard_pending(user)
     payload = {"fields": changes, "photo": photo_name, "remove_photo": remove_photo}
     challenge, code = otp.create_challenge(user, payload, destination=user.email)
-    _deliver(user, challenge, code)
+    delivered = _deliver(user, challenge, code)
 
-    flash("For your security we sent a passcode. Enter it to save these changes.", "info")
+    if delivered or session.get("otp_preview"):
+        flash("For your security we sent a passcode. Enter it to save these changes.", "info")
+    else:
+        flash(_UNDELIVERED, "error")
     return redirect(url_for("user.verify_profile"))
 
 
@@ -391,8 +433,10 @@ def resend_passcode():
         return redirect(url_for("user.verify_profile"))
 
     fresh, code = otp.create_challenge(user, challenge.payload, destination=challenge.destination)
-    _deliver(user, fresh, code)
-    flash("A new passcode is on its way.", "success")
+    if _deliver(user, fresh, code) or session.get("otp_preview"):
+        flash("A new passcode is on its way.", "success")
+    else:
+        flash(_UNDELIVERED, "error")
     return redirect(url_for("user.verify_profile"))
 
 

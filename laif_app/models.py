@@ -27,6 +27,7 @@ class User(db.Model):
     city = db.Column(db.String(120), default="")
     country = db.Column(db.String(120), default="")
     reset_token = db.Column(db.String(64), unique=True, nullable=True)
+    reset_sent_at = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

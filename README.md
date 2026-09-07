@@ -11,6 +11,8 @@ python run.py
 
 Open `http://127.0.0.1:5000`. The admin panel lives at `http://127.0.0.1:5000/admin/login`.
 
+For putting the site on a server, see [DEPLOY.md](DEPLOY.md).
+
 ## Project structure
 
 ```
@@ -86,12 +88,21 @@ configurable at the top of `config.py`.
 Delivery is by email. Set these environment variables to use a real mail server:
 
 ```powershell
-$env:LAIF_SMTP_HOST = "smtp.gmail.com"
-$env:LAIF_SMTP_PORT = "587"
+$env:LAIF_SMTP_HOST = "smtp.gmail.com"   # or mail.yourdomain.org
+$env:LAIF_SMTP_PORT = "587"              # 465 for implicit SSL
 $env:LAIF_SMTP_USER = "laifoffice2020@gmail.com"
 $env:LAIF_SMTP_PASSWORD = "<app password>"
 $env:LAIF_MAIL_SENDER = "laifoffice2020@gmail.com"
 ```
+
+Port 587 opens in the clear and upgrades with STARTTLS; port 465 is encrypted from
+the first byte. The port decides which is used, so setting `LAIF_SMTP_PORT` is normally
+enough. `LAIF_SMTP_SSL` overrides that choice, and `LAIF_SMTP_VERIFY_CERT=0` accepts a
+mail server with a self-signed certificate.
+
+`check_deploy.py` tests all of this against the real server, and will send a live test
+message: `python check_deploy.py you@example.com`.
+
 
 With no `LAIF_SMTP_HOST` set the code is written to the application log and shown on the verify
 screen, so the flow stays usable in development. **Set `LAIF_OTP_SHOW_IN_UI=0` before deploying**

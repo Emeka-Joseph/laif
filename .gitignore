@@ -29,3 +29,7 @@ laif_app/static/uploads/*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Deployment package (a 200 MB copy of the site; rebuilt, never committed)
+deploy/
+*.zip
