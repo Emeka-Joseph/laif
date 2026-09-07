@@ -33,3 +33,6 @@ Thumbs.db
 # Deployment package (a 200 MB copy of the site; rebuilt, never committed)
 deploy/
 *.zip
+
+# Per-server secrets: database and mailbox passwords. Never commit.
+local_settings.py

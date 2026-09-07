@@ -60,10 +60,26 @@ instead, or upload `images/` separately by FTP and the rest through the browser.
 When it is extracted, `app.py` and `passenger_wsgi.py` must sit directly in the
 application root — not inside a nested folder.
 
-## 4. Set the environment variables
+## 4. Set the configuration
 
-**Setup Python App → your app → Environment variables.** Add each one, then
-press **Save**.
+There are two ways to do this. Pick one.
+
+### Either: local_settings.py (simpler)
+
+Copy `local_settings.example.py` to `local_settings.py` in the application root
+and fill in the values. `config.py` imports it if it is there.
+
+Keep that file on the server only — it holds the database and mailbox passwords,
+and it is listed in `.gitignore` so it never reaches the repository. Because it is
+not part of the deployment zip, uploading a new build will not overwrite it.
+
+### Or: cPanel environment variables
+
+### The values, either way
+
+
+Set these as `LAIF_...` entries in **Setup Python App → Environment variables**,
+or as lines in `local_settings.py`. An environment variable wins if both are set.
 
 ### Required
 

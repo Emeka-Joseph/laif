@@ -40,21 +40,39 @@ OTP_RESEND_SECONDS = 45
 # How long a password-reset link stays usable.
 RESET_TTL_MINUTES = 60
 
-_DB_USER = os.environ.get("LAIF_DB_USER", "root")
-_DB_PASSWORD = os.environ.get("LAIF_DB_PASSWORD", "")
-_DB_HOST = os.environ.get("LAIF_DB_HOST", "localhost")
-_DB_PORT = os.environ.get("LAIF_DB_PORT", "3306")
-_DB_NAME = os.environ.get("LAIF_DB_NAME", "laifdb")
+# Settings for one particular server live in local_settings.py, which is kept
+# out of the repository. It is optional: without it everything falls back to
+# environment variables, which is how a development machine runs.
+try:
+    import local_settings as _local
+except ImportError:
+    _local = None
+
+
+def _setting(name, default=""):
+    """The environment wins, then local_settings.py, then the default."""
+    if name in os.environ:
+        return os.environ[name]
+    if _local is not None and hasattr(_local, name):
+        return str(getattr(_local, name))
+    return default
 
 
 def _flag(name, default="0"):
-    return os.environ.get(name, default).strip().lower() in {"1", "true", "yes", "on"}
+    return _setting(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
+_DB_USER = _setting("LAIF_DB_USER", "root")
+_DB_PASSWORD = _setting("LAIF_DB_PASSWORD", "")
+_DB_HOST = _setting("LAIF_DB_HOST", "localhost")
+_DB_PORT = _setting("LAIF_DB_PORT", "3306")
+_DB_NAME = _setting("LAIF_DB_NAME", "laifdb")
 
 
 # Port 465 is TLS from the first byte; 587 starts in the clear and upgrades
 # with STARTTLS. Picking the default from the port means setting the port is
 # usually the only mail change needed.
-_SMTP_PORT = int(os.environ.get("LAIF_SMTP_PORT", "587"))
+_SMTP_PORT = int(_setting("LAIF_SMTP_PORT", "587"))
 
 
 # The values a fresh checkout falls back to. Naming them here lets
@@ -65,7 +83,7 @@ DEFAULT_ADMIN_PASSWORD = "ChangeMe123!"
 
 
 class Config:
-    SECRET_KEY = os.environ.get("LAIF_SECRET_KEY", DEV_SECRET_KEY)
+    SECRET_KEY = _setting("LAIF_SECRET_KEY", DEV_SECRET_KEY)
     SQLALCHEMY_DATABASE_URI = (
         f"mysql+pymysql://{_DB_USER}:{_DB_PASSWORD}@{_DB_HOST}:{_DB_PORT}/{_DB_NAME}?charset=utf8mb4"
     )
@@ -76,21 +94,21 @@ class Config:
     # Email delivery for one-time passcodes. With no SMTP host configured the
     # code is written to the application log and shown on the verify screen,
     # which keeps local development workable without a mail server.
-    SMTP_HOST = os.environ.get("LAIF_SMTP_HOST", "")
+    SMTP_HOST = _setting("LAIF_SMTP_HOST", "")
     SMTP_PORT = _SMTP_PORT
-    SMTP_USER = os.environ.get("LAIF_SMTP_USER", "")
-    SMTP_PASSWORD = os.environ.get("LAIF_SMTP_PASSWORD", "")
+    SMTP_USER = _setting("LAIF_SMTP_USER", "")
+    SMTP_PASSWORD = _setting("LAIF_SMTP_PASSWORD", "")
     SMTP_USE_SSL = _flag("LAIF_SMTP_SSL", "1" if _SMTP_PORT == 465 else "0")
     SMTP_USE_TLS = _flag("LAIF_SMTP_TLS", "1")
     # Off only for a mail server presenting a self-signed certificate, which
     # some shared hosts do on their local relay.
     SMTP_VERIFY_CERT = _flag("LAIF_SMTP_VERIFY_CERT", "1")
-    MAIL_SENDER = os.environ.get("LAIF_MAIL_SENDER", "laifoffice2020@gmail.com")
+    MAIL_SENDER = _setting("LAIF_MAIL_SENDER", "laifoffice2020@gmail.com")
 
     # Show the passcode in the browser when no mail server is wired up.
     OTP_SHOW_IN_UI = _flag("LAIF_OTP_SHOW_IN_UI", "1")
 
     # The administrator seeded on an empty database. Set both on a public
     # server: the fallbacks are published in the repository.
-    ADMIN_EMAIL = os.environ.get("LAIF_ADMIN_EMAIL", DEFAULT_ADMIN_EMAIL)
-    ADMIN_PASSWORD = os.environ.get("LAIF_ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD)
+    ADMIN_EMAIL = _setting("LAIF_ADMIN_EMAIL", DEFAULT_ADMIN_EMAIL)
+    ADMIN_PASSWORD = _setting("LAIF_ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD)
