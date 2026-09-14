@@ -9,3 +9,8 @@
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
 PyMySQL==1.1.1
+
+# Re-encodes uploaded photographs for the web as they arrive. Ships as a
+# ready-built wheel for Python 3.9, so nothing is compiled on the server.
+# If the install fails, uploads still work — they are just stored full size.
+Pillow==11.3.0

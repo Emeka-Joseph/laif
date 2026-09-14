@@ -84,7 +84,7 @@
           <summary class="btn add-new">+ Add new image</summary>
           <form method="post" action="{{ url_for('user.add_work_media', work_id=work.id) }}" enctype="multipart/form-data">
             <label>Choose photos or short clips<input name="media" type="file" accept="image/*,video/*" multiple required></label>
-            <p class="dash-hint">Pick several at once if you like. Images up to 8MB, videos up to 60MB (MP4, WebM or MOV).</p>
+            <p class="dash-hint">Pick several at once if you like. Images up to {{ max_upload_mb }}MB, videos up to 60MB (MP4, WebM or MOV).</p>
             <button class="btn" type="submit">Upload</button>
           </form>
         </details>

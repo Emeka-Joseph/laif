@@ -35,18 +35,37 @@ VIDEO_EXTENSIONS = {"mp4", "webm", "mov", "m4v"}
 MEDIA_EXTENSIONS = IMAGE_EXTENSIONS | VIDEO_EXTENSIONS
 
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
+
+# What an image may weigh on the way IN. Pictures are re-encoded as they
+# arrive, so a 20MB camera photograph is worth accepting — it lands on disk at
+# well under a megabyte. Without Pillow this ceiling is not used and
+# MAX_IMAGE_BYTES applies instead, since the file would be stored as-is.
+MAX_IMAGE_SOURCE_BYTES = 25 * 1024 * 1024
 MAX_VIDEO_BYTES = 60 * 1024 * 1024
 MAX_PORTFOLIO_ITEMS = 40
 
 # A member's previous work is grouped into jobs; each job carries its own
 # gallery and its own set of links out to a website or social media handle.
-MAX_PORTFOLIO_WORKS = 20
+MAX_PORTFOLIO_WORKS = 5
 MAX_WORK_MEDIA = 15
 MAX_WORK_LINKS = 8
 
 # A member's own website and social media handles, shown on their profile
 # beside their contact details.
 MAX_MEMBER_LINKS = 8
+
+# How much of a member's bio the talent directory shows before the card is
+# clicked. The full text is on their profile.
+TALENT_BIO_WORDS = 40
+
+# Uploaded photographs are re-encoded for the web as they arrive: a phone or
+# camera picture is several megabytes, and serving it untouched is the
+# difference between a site that feels considered and one that feels broken.
+# Needs Pillow; without it uploads still work, just unoptimised. The on/off
+# switch sits further down, with the other environment-driven settings.
+UPLOAD_MAX_EDGE = 2400      # long edge in pixels, as for the church photographs
+UPLOAD_JPEG_QUALITY = 82
+UPLOAD_PNG_COLOURS = 256
 
 # Schemes a member may link out with. Anything else is rejected, and a bare
 # host such as "instagram.com/name" is upgraded to https:// on the way in.
@@ -83,6 +102,9 @@ def _flag(name, default="0"):
     return _setting(name, default).strip().lower() in {"1", "true", "yes", "on"}
 
 
+# Set LAIF_OPTIMIZE_UPLOADS=0 to store uploads exactly as they arrive.
+OPTIMIZE_UPLOADS = _flag("LAIF_OPTIMIZE_UPLOADS", "1")
+
 _DB_USER = _setting("LAIF_DB_USER", "root")
 _DB_PASSWORD = _setting("LAIF_DB_PASSWORD", "")
 _DB_HOST = _setting("LAIF_DB_HOST", "localhost")
@@ -110,7 +132,9 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     UPLOAD_FOLDER = UPLOAD_DIR
-    MAX_CONTENT_LENGTH = 64 * 1024 * 1024
+    # The whole request, which for the gallery is a batch of photographs.
+    # A shared host often caps uploads below this; DEPLOY.md says how to tell.
+    MAX_CONTENT_LENGTH = 128 * 1024 * 1024
 
     # Email delivery for one-time passcodes. With no SMTP host configured the
     # code is written to the application log and shown on the verify screen,

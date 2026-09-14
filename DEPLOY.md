@@ -145,7 +145,13 @@ like `source /home/USER/virtualenv/laif/3.11/bin/activate && cd /home/USER/laif`
 pip install -r requirements.txt
 ```
 
-Only Flask, Flask-SQLAlchemy and PyMySQL are pinned. Their own dependencies
+Pillow is in the list too: it re-encodes uploaded photographs for the web as they
+arrive. It ships as a ready-built wheel for Python 3.9, so nothing is compiled on
+the server. **If it fails to install, do not block on it** — uploads still work,
+they are simply stored at full size, and the admin dashboard says so under
+"Uploaded pictures".
+
+Only Flask, Flask-SQLAlchemy, PyMySQL and Pillow are pinned. Their own dependencies
 are left to pip, so the same file works whatever Python version cPanel gave
 you — on 3.9 it selects `click` 8.1.8, on 3.11+ it selects 8.5.0.
 
@@ -246,8 +252,12 @@ warnings from `passenger_wsgi.py` about unset variables appear there too.
 
 ## Known limits
 
-- `MAX_CONTENT_LENGTH` is 64 MB, but shared hosts often cap uploads lower. If
+- `MAX_CONTENT_LENGTH` is 128 MB, since a gallery batch is several photographs at
+  once, but shared hosts often cap uploads lower. If
   large video uploads fail with a server error rather than the app's own "file
   is too large" message, the host's limit is the one being hit.
+- Uploaded pictures are re-encoded on arrival, which takes a second or two per
+  photograph. A large gallery batch can therefore take a while to come back; that
+  is the resizing, not a hang.
 - Sign-up does not enforce a minimum password length; password *reset* requires
   eight characters. Worth making consistent when you next touch that code.

@@ -20,6 +20,10 @@ from laif_app.helpers import (
     allowed_resource_file,
     current_user,
     delete_upload,
+    human_size,
+    media_kind,
+    optimization_active,
+    optimize_upload,
     save_media,
 )
 from laif_app.models import (
@@ -69,6 +73,7 @@ def dashboard():
         projects=Project.query.order_by(Project.created_at.desc()).all(),
         albums=GalleryAlbum.query.order_by(GalleryAlbum.created_at.desc()).all(),
         comments=Comment.query.order_by(Comment.created_at.desc()).limit(12).all(),
+        uploads=uploads_report(),
         stats={
             "members": User.query.filter_by(role="member").count(),
             "posts": Post.query.count(),
@@ -642,3 +647,80 @@ def reactivate_member(user_id):
     db.session.commit()
     flash(f"{member.name} can sign in again.", "success")
     return redirect(url_for("admin.member_detail", user_id=member.id))
+
+
+# ---------------------------------------------------------------------------
+# Uploads already on disk
+# ---------------------------------------------------------------------------
+#
+# Everything uploaded from now on is re-encoded as it arrives. Anything that
+# landed before that is still full size, so this does the same job to the
+# backlog in one pass.
+
+# A run is capped so a folder with thousands of pictures cannot hold the
+# request open until the server gives up on it; the flash message says how
+# many are left and the button can simply be pressed again.
+OPTIMIZE_BATCH = 150
+
+
+def _upload_files():
+    if not os.path.isdir(UPLOAD_DIR):
+        return []
+    return sorted(
+        name for name in os.listdir(UPLOAD_DIR)
+        if os.path.isfile(os.path.join(UPLOAD_DIR, name)) and not name.startswith(".")
+    )
+
+
+def uploads_report():
+    """What is sitting in static/uploads, for the maintenance panel."""
+    images = heavy = 0
+    total = heavy_bytes = 0
+    for name in _upload_files():
+        size = os.path.getsize(os.path.join(UPLOAD_DIR, name))
+        total += size
+        if media_kind(name) == "image":
+            images += 1
+            # Anything past a megabyte is almost certainly untouched: a
+            # re-encoded 2400px photograph lands well under that.
+            if size > 1024 * 1024:
+                heavy += 1
+                heavy_bytes += size
+    return {
+        "files": len(_upload_files()),
+        "images": images,
+        "total": total,
+        "total_h": human_size(total),
+        "heavy": heavy,
+        "heavy_h": human_size(heavy_bytes),
+        "available": optimization_active(),
+    }
+
+
+@admin_bp.post("/uploads/optimize")
+@admin_required
+def optimize_uploads():
+    """Re-encode pictures that were uploaded before this was automatic."""
+    if not optimization_active():
+        flash(
+            "Picture optimising is unavailable: Pillow is not installed on this "
+            "server, or LAIF_OPTIMIZE_UPLOADS is switched off.", "error",
+        )
+        return redirect(url_for("admin.dashboard"))
+
+    names = [n for n in _upload_files() if media_kind(n) == "image"]
+    saved = changed = 0
+    for name in names[:OPTIMIZE_BATCH]:
+        cut, _error = optimize_upload(name)
+        if cut:
+            saved += cut
+            changed += 1
+
+    if changed:
+        flash(f"Optimised {changed} picture{'s' if changed != 1 else ''}, "
+              f"saving {human_size(saved)}.", "success")
+    else:
+        flash("Nothing to do — every picture is already optimised.", "info")
+    if len(names) > OPTIMIZE_BATCH:
+        flash(f"{len(names) - OPTIMIZE_BATCH} more to go; press the button again.", "info")
+    return redirect(url_for("admin.dashboard"))

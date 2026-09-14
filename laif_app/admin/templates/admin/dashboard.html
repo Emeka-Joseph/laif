@@ -247,6 +247,42 @@
       </div>
     </div>
 
+    <!-- ---------- Uploads ---------- -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Storage</div>
+          <h2>Uploaded pictures</h2>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="dash-hint">
+          {{ uploads.files }} file{{ '' if uploads.files == 1 else 's' }} in the uploads folder,
+          {{ uploads.total_h }} in total.
+          {% if uploads.available %}
+            Pictures are re-encoded automatically as they are uploaded.
+          {% else %}
+            <strong>Automatic optimising is off</strong> — Pillow is not installed on this server,
+            or LAIF_OPTIMIZE_UPLOADS is set to 0. Pictures are stored exactly as they arrive.
+          {% endif %}
+        </p>
+
+        {% if uploads.available and uploads.heavy %}
+          <p class="dash-hint">
+            {{ uploads.heavy }} picture{{ '' if uploads.heavy == 1 else 's' }} ({{ uploads.heavy_h }})
+            {{ 'was' if uploads.heavy == 1 else 'were' }} uploaded before this was automatic and
+            {{ 'is' if uploads.heavy == 1 else 'are' }} still full size.
+          </p>
+          <form method="post" action="{{ url_for('admin.optimize_uploads') }}"
+                onsubmit="return confirm('Optimise the pictures already uploaded? They are replaced with smaller versions and cannot be restored to full size.')">
+            <button class="btn" type="submit">Optimise {{ uploads.heavy }} existing picture{{ '' if uploads.heavy == 1 else 's' }}</button>
+          </form>
+        {% elif uploads.available %}
+          <p class="empty">Every picture is already optimised.</p>
+        {% endif %}
+      </div>
+    </div>
+
     <!-- ---------- Inquiries ---------- -->
     <div class="panel">
       <div class="panel-head">

@@ -33,7 +33,8 @@
           </div>
           <div class="eyebrow">{{ member.skills or "Member" }}</div>
           <h3>{{ member.name }}</h3>
-          <p>{{ member.bio or "A valued member of the LAIF family." }}</p>
+          {# A summary only — the whole bio is on the member's own page. #}
+          <p>{{ (member.bio or "A valued member of the LAIF family.")|first_words(bio_words) }}</p>
           <span class="member-meta">
             {% if member.portfolio %}{{ member.portfolio|length }} item(s) of work{% else %}View profile{% endif %}
           </span>

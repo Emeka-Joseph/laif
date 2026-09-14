@@ -15,6 +15,7 @@ from config import (
     OTP_RESEND_SECONDS,
     RESET_TTL_MINUTES,
     RESOURCE_CATEGORIES,
+    TALENT_BIO_WORDS,
     UPLOAD_DIR,
 )
 from laif_app import otp
@@ -127,7 +128,7 @@ def skills():
         .order_by(User.name)
         .all()
     )
-    return render_template("user/skills.html", members=members)
+    return render_template("user/skills.html", members=members, bio_words=TALENT_BIO_WORDS)
 
 
 @user_bp.route("/members/<int:user_id>")

@@ -65,7 +65,12 @@
             <label>Caption for this batch (optional)
               <input name="caption" maxlength="400" placeholder="Applied to every photograph added now; you can edit each one below.">
             </label>
-            <p class="dash-hint">Up to {{ max_photos }} photographs per album, 8MB each. {{ max_photos - album.count }} slot{{ '' if (max_photos - album.count) == 1 else 's' }} left.</p>
+            <p class="dash-hint">
+              Up to {{ max_photos }} photographs per album, {{ max_upload_mb }}MB each
+              {%- if optimizing %} — straight from a camera or phone is fine, each one is
+              resized and re-encoded for the web as it is uploaded{% endif %}.
+              {{ max_photos - album.count }} slot{{ '' if (max_photos - album.count) == 1 else 's' }} left.
+            </p>
             <button class="btn" style="margin-top:14px">Upload photographs</button>
           </form>
         </div>

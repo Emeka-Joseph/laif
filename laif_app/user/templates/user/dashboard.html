@@ -43,7 +43,7 @@
           <div class="avatar-controls">
             <label for="photo">Profile picture</label>
             <input id="photo" name="photo" type="file" accept="image/*" data-preview="avatar-image">
-            <p class="dash-hint">JPG, PNG, WebP or GIF, up to 8MB.</p>
+            <p class="dash-hint">JPG, PNG, WebP or GIF, up to {{ max_upload_mb }}MB{% if optimizing %} — it is resized for the web automatically{% endif %}.</p>
             {% if user.photo %}
               <label class="check"><input type="checkbox" name="remove_photo" value="1"> Remove my current picture</label>
             {% endif %}
@@ -127,7 +127,7 @@
             <label>Short summary<input name="summary" maxlength="400" placeholder="One line shown on the tile."></label>
             <label>Full details<textarea name="description" style="min-height:110px" placeholder="What the job involved, what you delivered, anything a future client should know."></textarea></label>
             <label>Pictures or short clips<input name="media" type="file" accept="image/*,video/*" multiple></label>
-            <p class="dash-hint">Choose as many as you like now — you can add more afterwards. Images up to 8MB, videos up to 60MB.</p>
+            <p class="dash-hint">Choose as many as you like now — you can add more afterwards. Images up to {{ max_upload_mb }}MB, videos up to 60MB.</p>
 
             <fieldset class="link-fields" data-repeat="{{ max_links }}">
               <legend>Websites &amp; social media</legend>

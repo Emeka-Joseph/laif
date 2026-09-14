@@ -118,10 +118,35 @@ Portfolio media lands in `laif_app/static/uploads/` under a random filename.
 
 | | Formats | Limit |
 |---|---|---|
-| Images | jpg, jpeg, png, webp, gif | 8 MB |
+| Images | jpg, jpeg, png, webp, gif | 25 MB in, stored at well under 1 MB |
 | Videos | mp4, webm, mov, m4v | 60 MB |
 
-A member may list up to 20 pieces of work, holding up to 15 files each and 40 files in total,
+**Pictures are re-encoded on the way in.** A photograph straight off a phone or camera is
+several megabytes, and serving it untouched is what makes a site feel slow, so every uploaded
+image is resized to a 2400px long edge and re-encoded — JPEG at quality 82 progressive, PNG to a
+256-colour palette that keeps any transparency. A 9 MB camera photograph lands on disk at around
+450 KB. That is why the ceiling *going in* is 25 MB rather than 8: the file is large when it
+arrives and small once it is stored.
+
+Three things the encoder is careful about:
+
+- **EXIF rotation is baked into the pixels** before the metadata is dropped. Stripping the flag
+  without turning the image would lay every portrait shot on its side.
+- **A camera JPEG is often an MPO**, a container holding the photograph plus an embedded
+  preview. Pillow reports it as multi-frame, so a naive "skip anything animated" check would
+  skip exactly the pictures most worth re-encoding. Only GIF, WebP and APNG count as animated.
+- **A file is never made larger.** If the re-encoded version comes out bigger, the original is
+  kept.
+
+The work is done by `optimize_upload()` in `helpers.py`, called from `save_media()`, so it
+applies to every image the site accepts — gallery photographs, project covers, member portfolios
+and profile pictures alike. It needs Pillow; if that is missing the upload still succeeds and is
+simply stored full size, and the admin dashboard says so. `LAIF_OPTIMIZE_UPLOADS=0` turns it off.
+
+Anything uploaded before this existed is still full size. **Admin dashboard → Uploaded
+pictures** counts those and re-encodes them in one pass, 150 at a time.
+
+A member may list up to 5 pieces of work, holding up to 15 files each and 40 files in total,
 with up to 8 links per job and 8 on the profile itself. Deleting a job removes its pictures from disk along with it, as does
 removing a single picture or replacing a profile photo. Limits live in `config.py`;
 `MAX_CONTENT_LENGTH` is the hard ceiling Flask enforces before a request reaches a view, and a
