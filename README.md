@@ -23,7 +23,8 @@ laif_app/
 ├── extensions.py       shared SQLAlchemy instance
 ├── models.py           User, Post, Comment, Resource, ContactMessage, AccessCode,
 │                       PortfolioWork, PortfolioItem, WorkLink, MemberLink,
-│                       OtpChallenge
+│                       OtpChallenge, Project, GalleryAlbum, GalleryPhoto,
+│                       SiteSetting
 ├── helpers.py          current_user(), admin_required, login_required, upload handling
 ├── otp.py              one-time passcodes guarding profile changes
 ├── seed.py             first-run seeding and additive column sync
@@ -140,8 +141,10 @@ and date. Nothing is lost, and a member can merge those entries afterwards from 
 ## The admin panel
 
 `/admin/dashboard` opens on a row of counters — members, posts, resources, unused invitation
-codes, contact inquiries — followed by the newest members, the posts table and the inquiry inbox,
-each in its own panel. The counters for members and codes are links through to those screens.
+codes, open projects, gallery albums, contact inquiries, and deactivated accounts when there are
+any — followed by the newest members, the posts table, the projects and albums tables, the latest
+comments and the inquiry inbox, each in its own panel. The counters for members, codes, projects
+and albums link through to those screens.
 
 ### Registered members
 
@@ -168,6 +171,75 @@ database error, in `_delete_blocker()`:
 
 Both list and detail pages disable the delete button in those cases, and the route checks again
 before acting — the button is a convenience, not the guard.
+
+## Projects & giving
+
+`/projects` is where the church posts the work it is raising for — a building fund, prison
+visitation, a mission trip. Open appeals come first, then anything paused, then completed work
+under "Thank you", so a visitor who came to give lands on something they can give to.
+
+Each project carries a title, summary, category, full description, cover photograph, location
+and date. A target and a raised-so-far figure are both optional: set them and the tile shows a
+progress bar with the two amounts beneath it; leave them blank and the project simply reads as
+ongoing. `Project.progress` returns a percentage, or `None` when there is no target, and every
+template branches on that rather than assuming money is involved.
+
+**No card payments are taken.** Giving happens off-site, so the page shows the church's account
+details and asks for the project name as the transfer reference. Those details live in the
+`SiteSetting` key-value table and are edited at `/admin/projects`, which keeps the bank account
+out of the source code. Leave every field blank and the giving panel does not render at all,
+rather than appearing empty.
+
+Admin: `/admin/projects` lists everything with status and progress, and holds the giving form.
+`/admin/projects/new` and `/admin/projects/<id>/edit` post and amend; amounts are parsed by
+`_money()`, which accepts `25000` or `1,500.50` and refuses anything else with a message instead
+of a 500. Deleting a project removes its cover photograph from disk.
+
+## Gallery
+
+`/gallery` shows one tile per programme — the album's cover photograph, its title, when and
+where it was held, and a photo count. Clicking through to `/gallery/<id>` opens every photograph
+from that programme in a grid, and clicking any of those opens the same lightbox the member
+portfolios use: arrow keys or the chevrons move between them, Escape closes.
+
+An album with no photographs is hidden from the public gallery rather than shown as an empty
+tile; the admin list flags it as hidden so the reason is visible.
+
+Admin: `/admin/gallery` lists the albums, `/admin/gallery/new` creates one, and
+`/admin/gallery/<id>` manages its details and photographs on a single screen. Several
+photographs upload at once with an optional caption applied to the batch, and each one can then
+be captioned individually, made the cover, or deleted. The first photograph into an empty album
+becomes its cover automatically; deleting the cover promotes another so the album is never left
+unrepresented. Up to `MAX_ALBUM_PHOTOS` (200) per album, 8MB each.
+
+## Moderating what members post
+
+- **Comments.** Every comment on a blog post carries a delete button for a signed-in admin, both
+  under the post itself and in the "Latest comments" panel on the dashboard.
+- **Previous work.** A member's portfolio entries are listed on `/admin/members/<id>` with a
+  delete button each, which removes the entry and its uploaded photographs and clips from disk.
+
+### Deactivating an account
+
+Deletion is irreversible and is refused outright for an account that has authored posts.
+**Deactivation** is the softer alternative, on the member's detail page:
+
+- the account cannot sign in, and is told to contact the church office;
+- the profile leaves the Skills & talents directory and `/members/<id>` redirects away;
+- a password reset cannot be requested for it;
+- an already-open session stops working on the member's next click — `current_user()` returns
+  `None` for a suspended account, so the cookie alone is not enough;
+- nothing is deleted. Their work, photographs and details stay exactly as they were, and
+  **Reactivate** puts everything back.
+
+An optional reason can be recorded, visible only to administrators. Administrators cannot be
+deactivated here, and no admin can deactivate their own account, for the same reason they cannot
+delete it. `/admin/members?status=suspended` lists suspended accounts, and the dashboard shows a
+counter when there are any.
+
+`User.is_active` is added by `sync_columns()` as a nullable column, so rows written before it
+existed read as `NULL`. `User.active` treats `NULL` as active, and `activate_existing_accounts()`
+settles the stored value on first start so filters and counts agree.
 
 ## Accounts
 

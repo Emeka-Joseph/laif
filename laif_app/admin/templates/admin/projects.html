@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Projects · Admin · LAIF{% endblock %}
+{% block content %}
+
+<section class="page-hero admin-hero">
+  <div class="container">
+    <div class="eyebrow">Admin dashboard</div>
+    <h1>Projects &amp; giving</h1>
+    <p>Post the works the church is raising for, and keep the account details right.</p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('admin.new_project') }}">+ New project</a>
+      <a class="btn outline" href="{{ url_for('user.projects') }}">View the public page</a>
+      <a class="btn outline" href="{{ url_for('admin.dashboard') }}">← Dashboard</a>
+    </div>
+  </div>
+</section>
+
+<section class="section admin-section">
+  <div class="container">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Projects</div>
+          <h2>Everything posted</h2>
+        </div>
+        <a class="btn outline small" href="{{ url_for('admin.new_project') }}">+ New project</a>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr><th>Project</th><th>Status</th><th>Raised</th><th>Posted</th><th class="right">Actions</th></tr>
+          </thead>
+          <tbody>
+            {% for project in projects %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('user.project_detail', project_id=project.id) }}">{{ project.title }}</a>
+                  {% if project.category %}<div class="cell-sub">{{ project.category }}</div>{% endif %}
+                </td>
+                <td><span class="pill {{ project.status }}">{{ project.status|capitalize }}</span></td>
+                <td>
+                  {% if project.target %}
+                    {{ project.currency }} {{ '{:,.0f}'.format(project.raised|float if project.raised else 0) }}
+                    <div class="cell-sub">of {{ '{:,.0f}'.format(project.target|float) }} · {{ project.progress }}%</div>
+                  {% else %}
+                    <span class="cell-sub">No target set</span>
+                  {% endif %}
+                </td>
+                <td>{{ project.created_at.strftime('%d %b %Y') }}</td>
+                <td class="right">
+                  <div class="row-actions">
+                    <a class="btn outline small" href="{{ url_for('admin.edit_project', project_id=project.id) }}">Edit</a>
+                    <button class="btn small danger" type="submit" form="drop-project-{{ project.id }}">Delete</button>
+                  </div>
+                  <form id="drop-project-{{ project.id }}" method="post"
+                        action="{{ url_for('admin.delete_project', project_id=project.id) }}"
+                        onsubmit="return confirm('Delete “{{ project.title }}”? This cannot be undone.')"></form>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="empty">No projects yet. Add the first one.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Giving</div>
+          <h2>Account details shown to givers</h2>
+        </div>
+      </div>
+      <div class="panel-body">
+        <p class="dash-hint">These appear beside every project. Leave a field blank to hide it. With all of them blank, the giving panel does not appear on the site at all.</p>
+        <form method="post" action="{{ url_for('admin.update_giving') }}">
+          <div class="field-grid">
+            {% for key, label in giving_fields %}
+              {% if key != 'giving_note' %}
+                <label>{{ label }}<input name="{{ key }}" value="{{ giving[key] }}"></label>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <label>Anything else givers should know
+            <textarea name="giving_note" rows="3">{{ giving.giving_note }}</textarea>
+          </label>
+          <button class="btn" style="margin-top:18px">Save giving details</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

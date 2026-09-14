@@ -1,0 +1,41 @@
+{# One project tile. Expects `project` in scope; shared by the projects page
+   and the "other projects" strip on a project's own page. #}
+<article class="work-card project-card">
+  <a class="project-card-link" href="{{ url_for('user.project_detail', project_id=project.id) }}">
+    <div class="work-card-media">
+      {% if project.image %}
+        <img src="{{ url_for('static', filename='uploads/' ~ project.image) }}"
+             alt="{{ project.title }}" loading="lazy" decoding="async">
+      {% else %}
+        <span class="work-thumb-empty">{{ project.title[:1]|upper }}</span>
+      {% endif %}
+      {% if project.status == 'completed' %}
+        <span class="work-count project-flag done">Completed</span>
+      {% elif project.status == 'paused' %}
+        <span class="work-count project-flag">Paused</span>
+      {% elif project.featured %}
+        <span class="work-count project-flag urgent">Priority</span>
+      {% endif %}
+    </div>
+    <div class="work-card-body">
+      {% if project.category %}<div class="tag">{{ project.category }}</div>{% endif %}
+      <h3>{{ project.title }}</h3>
+      {% if project.summary %}<p>{{ project.summary }}</p>{% endif %}
+
+      {% if project.progress is not none %}
+        <div class="progress" role="img"
+             aria-label="{{ project.progress }} percent of the {{ project.currency }} {{ '{:,.0f}'.format(project.target|float) }} target raised">
+          <span style="width:{{ project.progress }}%"></span>
+        </div>
+        <div class="progress-line">
+          <strong>{{ project.currency }} {{ '{:,.0f}'.format(project.raised|float if project.raised else 0) }}</strong>
+          <span>of {{ project.currency }} {{ '{:,.0f}'.format(project.target|float) }}</span>
+        </div>
+      {% endif %}
+
+      {% if project.location or project.starts_on %}
+        <div class="member-meta">{{ [project.location, project.starts_on]|select|join(' · ') }}</div>
+      {% endif %}
+    </div>
+  </a>
+</article>

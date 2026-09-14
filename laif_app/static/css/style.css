@@ -1735,3 +1735,228 @@ body.lightbox-open { overflow: hidden; }
   .nav, .footer, .btn, .menu { display: none !important; }
   body { background: #fff; }
 }
+
+/* ============================================================
+   Projects, giving and the programme gallery
+   ============================================================ */
+
+/* A leader whose photograph has not been supplied yet. Sits in the same
+   4:5 frame as .pastor-card img so the row stays even. */
+.portrait-fallback {
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(150deg, var(--sand) 0%, var(--sand-deep) 100%);
+  display: grid;
+  place-items: center;
+}
+
+.portrait-fallback span {
+  font-family: var(--display);
+  font-size: 2.6rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--navy);
+  opacity: .5;
+}
+
+/* ---------- Project tiles ---------- */
+
+.project-card .project-card-link,
+.album-card > a {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.project-card .work-card-body p,
+.album-card .work-card-body p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: .93rem;
+  line-height: 1.62;
+}
+
+.project-flag { background: rgba(8, 23, 38, .78); }
+.project-flag.done { background: rgba(76, 122, 46, .92); }
+.project-flag.urgent { background: var(--crimson); }
+
+/* The raised-so-far bar. Purely decorative: the figures beneath it carry
+   the same information for anyone who cannot see the fill. */
+.progress {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--sand-deep);
+  overflow: hidden;
+  margin: 14px 0 8px;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--crimson) 0%, var(--gold) 140%);
+  transition: width .6s var(--ease);
+}
+
+.progress.big { height: 11px; margin: 6px 0 16px; }
+
+.progress-line {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: .86rem;
+  color: var(--muted);
+}
+
+.progress-line strong { font-size: 1rem; color: var(--navy); }
+
+.progress-figures { display: grid; gap: 12px; }
+.progress-figures > div { display: flex; flex-direction: column; }
+.progress-figures strong { font-family: var(--display); font-size: 1.22rem; color: var(--navy); }
+.progress-figures span { font-size: .82rem; color: var(--muted); letter-spacing: .02em; }
+
+.project-hero-image {
+  width: 100%;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 8px;
+}
+
+/* ---------- Giving panel ---------- */
+
+.giving-section { padding-top: 0; }
+
+.giving-panel {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  gap: 40px;
+  align-items: start;
+  background: var(--navy-deep);
+  background-image: var(--grain);
+  border-radius: var(--r-xl);
+  padding: 46px 48px;
+  color: #e9eff5;
+}
+
+.giving-panel .eyebrow { color: var(--gold); }
+.giving-panel h2 { color: #fff; margin: 8px 0 14px; }
+.giving-panel p { color: #b9c8d6; line-height: 1.75; }
+.giving-note { color: var(--gold) !important; font-size: .92rem; }
+
+.giving-details dl,
+.giving-list { margin: 0; display: grid; gap: 2px; }
+
+.giving-details dl > div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .09);
+}
+
+.giving-details dt { color: #8fa3b6; font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; }
+.giving-details dd { margin: 0; color: #fff; font-weight: 500; word-break: break-word; }
+
+.giving-list > div { padding: 9px 0; border-bottom: 1px solid var(--line); }
+.giving-list > div:last-child { border-bottom: 0; }
+.giving-list dt { font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.giving-list dd { margin: 3px 0 0; font-weight: 600; color: var(--navy); word-break: break-word; }
+
+/* ---------- Gallery albums ---------- */
+
+.album-card .album-open {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: .86rem;
+  font-weight: 600;
+  color: var(--crimson);
+}
+
+.album-card:hover .album-open { text-decoration: underline; }
+
+.album-actions { padding: 0 22px 20px; }
+
+.album-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 44px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.album-nav a { font-weight: 600; color: var(--navy); }
+.album-nav a:hover { color: var(--crimson); }
+
+/* ---------- Admin: photographs in an album ---------- */
+
+.admin-photo-grid { grid-template-columns: repeat(3, 1fr); }
+
+.admin-photo {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  position: relative;
+}
+
+.admin-photo.is-cover { border-color: var(--crimson); box-shadow: 0 0 0 2px rgba(168, 31, 45, .12); }
+.admin-photo img { width: 100%; height: 190px; object-fit: cover; display: block; }
+.admin-photo figcaption { padding: 12px 13px 14px; display: grid; gap: 10px; }
+
+.caption-form { display: flex; gap: 8px; }
+.caption-form input { flex: 1; min-width: 0; margin: 0; }
+
+/* ---------- Status pills ---------- */
+
+.pill {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: .74rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.pill.active { background: rgba(76, 122, 46, .13); color: var(--green); }
+.pill.completed { background: rgba(76, 122, 46, .13); color: var(--green); }
+.pill.paused { background: rgba(194, 152, 74, .16); color: #8a6a24; }
+.pill.suspended { background: rgba(168, 31, 45, .1); color: var(--crimson); }
+
+.badge.suspended { background: rgba(168, 31, 45, .1); color: var(--crimson); }
+
+.cell-sub { font-size: .8rem; color: var(--muted); margin-top: 3px; }
+.cell-sub.warn { color: #8a6a24; }
+
+.stat-tile.warn .stat-value { color: var(--crimson); }
+
+.notice.warn { border-left: 3px solid var(--crimson); }
+.notice.inline { margin: 14px 0 0; font-size: .9rem; }
+
+/* A work row in the admin sidebar carries its own delete button. */
+.work-nav.moderate li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.work-nav.moderate li a { flex: 1; min-width: 0; }
+
+.comment-moderate { margin-top: 10px; }
+
+.form-wrap.wide { max-width: 860px; }
+.avatar-preview.wide { width: 200px; height: 130px; border-radius: var(--r-md); object-fit: cover; }
+
+@media (max-width: 980px) {
+  .giving-panel { grid-template-columns: 1fr; gap: 28px; padding: 34px 28px; }
+  .giving-details dl > div { grid-template-columns: 1fr; gap: 2px; }
+  .admin-photo-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .admin-photo-grid { grid-template-columns: 1fr; }
+  .album-nav { flex-direction: column; }
+  .caption-form { flex-direction: column; }
+}

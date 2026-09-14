@@ -8,6 +8,27 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 RESOURCE_CATEGORIES = ["E-books", "Study guides", "Sermons", "Family & life"]
 RESOURCE_EXTENSIONS = {"pdf", "doc", "docx", "ppt", "pptx", "epub", "mp3", "mp4", "zip"}
 
+# Church projects the congregation is invited to give towards.
+PROJECT_CATEGORIES = [
+    "Building", "Outreach", "Missions", "Welfare", "Youth & children", "Equipment",
+]
+PROJECT_STATUSES = ["active", "completed", "paused"]
+
+# Photographs of a programme, grouped into one album per event.
+MAX_ALBUM_PHOTOS = 200
+
+# Giving details shown on the projects page. Held in the database so the
+# office can correct them from the admin panel; these are only the labels.
+GIVING_FIELDS = [
+    ("giving_bank", "Bank name"),
+    ("giving_account_name", "Account name"),
+    ("giving_account_number", "Account number"),
+    ("giving_iban", "IBAN"),
+    ("giving_swift", "SWIFT / BIC"),
+    ("giving_contact", "Who to speak to"),
+    ("giving_note", "Anything else givers should know"),
+]
+
 # Portfolio media: photographs and short clips of a member's previous work.
 IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
 VIDEO_EXTENSIONS = {"mp4", "webm", "mov", "m4v"}

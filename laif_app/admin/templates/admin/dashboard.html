@@ -9,6 +9,8 @@
     <p>Members, posts, resources, invitations and inquiries — all from one place.</p>
     <div class="hero-actions">
       <a class="btn" href="{{ url_for('admin.members') }}">View all members</a>
+      <a class="btn outline" href="{{ url_for('admin.projects') }}">Projects &amp; giving</a>
+      <a class="btn outline" href="{{ url_for('admin.albums') }}">Gallery albums</a>
       <a class="btn outline" href="{{ url_for('admin.new_post') }}">+ New post</a>
       <a class="btn outline" href="{{ url_for('admin.new_resource') }}">+ Add resource</a>
       <a class="btn outline" href="{{ url_for('admin.codes') }}">Invitation codes</a>
@@ -39,10 +41,27 @@
         <span class="stat-label">Unused invitation codes</span>
         <span class="stat-more">Generate →</span>
       </a>
+      <a class="stat-tile" href="{{ url_for('admin.projects') }}">
+        <span class="stat-value">{{ stats.projects }}</span>
+        <span class="stat-label">Open projects</span>
+        <span class="stat-more">Manage →</span>
+      </a>
+      <a class="stat-tile" href="{{ url_for('admin.albums') }}">
+        <span class="stat-value">{{ stats.albums }}</span>
+        <span class="stat-label">Gallery albums</span>
+        <span class="stat-more">Manage →</span>
+      </a>
       <div class="stat-tile">
         <span class="stat-value">{{ stats.messages }}</span>
         <span class="stat-label">Contact inquiries</span>
       </div>
+      {% if stats.suspended %}
+        <a class="stat-tile warn" href="{{ url_for('admin.members', status='suspended') }}">
+          <span class="stat-value">{{ stats.suspended }}</span>
+          <span class="stat-label">Deactivated accounts</span>
+          <span class="stat-more">Review →</span>
+        </a>
+      {% endif %}
     </div>
 
     <!-- ---------- Newest members ---------- -->
@@ -115,6 +134,113 @@
               </tr>
             {% else %}
               <tr><td colspan="4" class="empty">No posts yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ---------- Projects ---------- -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Giving</div>
+          <h2>Church projects</h2>
+        </div>
+        <a class="btn outline small" href="{{ url_for('admin.projects') }}">Manage projects</a>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Project</th><th>Status</th><th>Raised</th><th class="right">Actions</th></tr></thead>
+          <tbody>
+            {% for project in projects[:6] %}
+              <tr>
+                <td><a href="{{ url_for('user.project_detail', project_id=project.id) }}">{{ project.title }}</a></td>
+                <td><span class="pill {{ project.status }}">{{ project.status|capitalize }}</span></td>
+                <td>
+                  {% if project.target %}
+                    {{ project.currency }} {{ '{:,.0f}'.format(project.raised|float if project.raised else 0) }}
+                    <div class="cell-sub">{{ project.progress }}% of target</div>
+                  {% else %}<span class="cell-sub">No target</span>{% endif %}
+                </td>
+                <td class="right">
+                  <a class="btn outline small" href="{{ url_for('admin.edit_project', project_id=project.id) }}">Edit</a>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4" class="empty">No projects yet. <a href="{{ url_for('admin.new_project') }}">Post the first one.</a></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ---------- Gallery ---------- -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Gallery</div>
+          <h2>Programme albums</h2>
+        </div>
+        <a class="btn outline small" href="{{ url_for('admin.new_album') }}">+ New album</a>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>Programme</th><th>Photographs</th><th>Added</th><th class="right">Actions</th></tr></thead>
+          <tbody>
+            {% for album in albums[:6] %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('admin.edit_album', album_id=album.id) }}">{{ album.title }}</a>
+                  {% if album.meta_line %}<div class="cell-sub">{{ album.meta_line }}</div>{% endif %}
+                </td>
+                <td>
+                  {{ album.count }}
+                  {% if not album.photos %}<div class="cell-sub warn">Hidden until a photo is added</div>{% endif %}
+                </td>
+                <td>{{ album.created_at.strftime('%d %b %Y') }}</td>
+                <td class="right">
+                  <a class="btn outline small" href="{{ url_for('admin.edit_album', album_id=album.id) }}">Manage</a>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4" class="empty">No albums yet. <a href="{{ url_for('admin.new_album') }}">Create the first one.</a></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ---------- Comments ---------- -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Moderation</div>
+          <h2>Latest comments</h2>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="table">
+          <thead><tr><th>From</th><th>Comment</th><th>On</th><th>Left</th><th class="right">Actions</th></tr></thead>
+          <tbody>
+            {% for comment in comments %}
+              <tr>
+                <td>{{ comment.name }}</td>
+                <td>{{ comment.body[:90] }}{% if comment.body|length > 90 %}…{% endif %}</td>
+                <td><a href="{{ url_for('user.post_detail', post_id=comment.post_id) }}">{{ comment.post.title[:40] }}</a></td>
+                <td>{{ comment.created_at.strftime('%d %b %Y') }}</td>
+                <td class="right">
+                  <button class="btn small danger" type="submit" form="drop-comment-{{ comment.id }}">Delete</button>
+                  <form id="drop-comment-{{ comment.id }}" method="post"
+                        action="{{ url_for('admin.delete_comment', comment_id=comment.id) }}"
+                        onsubmit="return confirm('Delete this comment?')"></form>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="empty">No comments yet.</td></tr>
             {% endfor %}
           </tbody>
         </table>

@@ -195,6 +195,14 @@ Go to `/admin/login` and sign in with `LAIF_ADMIN_EMAIL` and
 The first start also seeds three sample resources and one sample blog post
 ("There is more grace for today"). Edit or delete them from the admin panel.
 
+Two more things to set before announcing the site:
+
+- **Giving details.** `/admin/projects` has a form for the bank account shown beside every
+  project. Until at least one field is filled in, the giving panel does not appear on the
+  public page at all — so a visitor is never shown an empty account box.
+- **The first project and album.** `/admin/projects/new` and `/admin/gallery/new`. An album
+  stays hidden from the public gallery until it has at least one photograph.
+
 ---
 
 ## Afterwards
@@ -202,7 +210,8 @@ The first start also seeds three sample resources and one sample blog post
 **Uploading new code.** Replace the changed files, then press **Restart** on the
 Setup Python App page. Passenger keeps the old code in memory until you do.
 
-**Anything the app writes.** `laif_app/static/uploads/` holds members' portfolio
+**Anything the app writes.** `laif_app/static/uploads/` now also holds project cover
+photographs and every gallery photograph, alongside members’ portfolio
 photographs and profile pictures. It is not in the zip beyond an empty
 placeholder and it is excluded from git, so **back it up separately** — with the
 database — before any redeploy. Everything else can be rebuilt from the

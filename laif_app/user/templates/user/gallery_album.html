@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ album.title }} · Gallery · LAIF Community{% endblock %}
+{% block description %}{{ album.description[:160] if album.description else 'Photographs from ' ~ album.title ~ ' at LAIF Church.' }}{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">Gallery</div>
+    <h1>{{ album.title }}</h1>
+    {% if album.meta_line %}<p class="work-hero-meta">{{ album.meta_line }}</p>{% endif %}
+    {% if album.description %}<p>{{ album.description }}</p>{% endif %}
+    <div class="hero-actions">
+      <a class="btn outline" href="{{ url_for('user.gallery') }}">← All programmes</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if photos %}
+      <div class="gallery showcase" data-lightbox>
+        {% for photo in photos %}
+          {% set src = url_for('static', filename='uploads/' ~ photo.filename) %}
+          <figure class="tile">
+            <button type="button" class="tile-open"
+                    data-kind="image"
+                    data-src="{{ src }}"
+                    data-title="{{ album.title }}"
+                    data-caption="{{ photo.caption }}"
+                    aria-label="Open photograph {{ loop.index }} of {{ photos|length }}">
+              <img src="{{ src }}" alt="{{ photo.caption or album.title }}" loading="lazy" decoding="async">
+            </button>
+            {% if photo.caption %}
+              <figcaption class="tile-caption"><span>{{ photo.caption }}</span></figcaption>
+            {% endif %}
+          </figure>
+        {% endfor %}
+      </div>
+      <p class="dash-hint" style="margin-top:16px">Click any photograph to open it full size; the arrow keys move between them.</p>
+    {% else %}
+      <div class="notice">This album has no photographs yet.</div>
+    {% endif %}
+
+    {% if previous or following %}
+      <div class="album-nav">
+        {% if previous %}
+          <a href="{{ url_for('user.gallery_album', album_id=previous.id) }}">← {{ previous.title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if following %}
+          <a href="{{ url_for('user.gallery_album', album_id=following.id) }}">{{ following.title }} →</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

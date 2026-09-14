@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Projects &amp; giving · LAIF Community{% endblock %}
+{% block description %}The work the LAIF Church family is building together, and how to give towards it.{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">Projects &amp; giving</div>
+    <h1>What we are building together.</h1>
+    <p>From the church building to the prisons we visit, these are the works the LAIF family is carrying. Every gift, of any size, moves one of them forward.</p>
+    {% if has_giving %}
+      <div class="hero-actions">
+        <a class="btn" href="#giving">How to give →</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    {% if active %}
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Open appeals</div>
+          <h2>Projects you can give to now</h2>
+        </div>
+      </div>
+      <div class="work-grid project-grid">
+        {% for project in active %}{% include "user/_project_card.html" %}{% endfor %}
+      </div>
+    {% endif %}
+
+    {% if paused %}
+      <div class="section-head" style="margin-top:56px">
+        <div>
+          <div class="eyebrow">On hold</div>
+          <h2>Paused for now</h2>
+        </div>
+      </div>
+      <div class="work-grid project-grid">
+        {% for project in paused %}{% include "user/_project_card.html" %}{% endfor %}
+      </div>
+    {% endif %}
+
+    {% if completed %}
+      <div class="section-head" style="margin-top:56px">
+        <div>
+          <div class="eyebrow">Thank you</div>
+          <h2>Completed, by God's grace</h2>
+        </div>
+      </div>
+      <div class="work-grid project-grid">
+        {% for project in completed %}{% include "user/_project_card.html" %}{% endfor %}
+      </div>
+    {% endif %}
+
+    {% if not active and not completed and not paused %}
+      <div class="notice">No projects have been posted yet. Please check back soon.</div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% if has_giving %}
+<section class="section giving-section" id="giving">
+  <div class="container">
+    <div class="giving-panel">
+      <div class="giving-copy">
+        <div class="eyebrow">How to give</div>
+        <h2>Giving towards these projects</h2>
+        <p>Gifts are received directly by the church office. Please add the name of the project as the reference so it reaches the right work, and keep your transfer receipt.</p>
+        {% if giving.giving_note %}<p class="giving-note">{{ giving.giving_note }}</p>{% endif %}
+      </div>
+      <div class="giving-details">
+        <dl>
+          {% for key, label in giving_fields %}
+            {% if giving[key] and key != 'giving_note' %}
+              <div>
+                <dt>{{ label }}</dt>
+                <dd>{{ giving[key] }}</dd>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

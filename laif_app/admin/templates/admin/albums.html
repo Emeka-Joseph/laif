@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Gallery · Admin · LAIF{% endblock %}
+{% block content %}
+
+<section class="page-hero admin-hero">
+  <div class="container">
+    <div class="eyebrow">Admin dashboard</div>
+    <h1>Gallery albums</h1>
+    <p>One album per programme. The cover photograph is what visitors click to open it.</p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('admin.new_album') }}">+ New album</a>
+      <a class="btn outline" href="{{ url_for('user.gallery') }}">View the public gallery</a>
+      <a class="btn outline" href="{{ url_for('admin.dashboard') }}">← Dashboard</a>
+    </div>
+  </div>
+</section>
+
+<section class="section admin-section">
+  <div class="container">
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Programmes</div>
+          <h2>All albums</h2>
+        </div>
+        <a class="btn outline small" href="{{ url_for('admin.new_album') }}">+ New album</a>
+      </div>
+
+      {% if albums %}
+        <div class="panel-body">
+          <div class="work-grid album-grid">
+            {% for album in albums %}
+              <article class="work-card album-card">
+                <a href="{{ url_for('admin.edit_album', album_id=album.id) }}">
+                  <div class="work-card-media">
+                    {% if album.cover %}
+                      <img src="{{ url_for('static', filename='uploads/' ~ album.cover.filename) }}" alt="" loading="lazy">
+                    {% else %}
+                      <span class="work-thumb-empty">{{ album.title[:1]|upper }}</span>
+                    {% endif %}
+                    <span class="work-count">{{ album.count }} photo{{ '' if album.count == 1 else 's' }}</span>
+                  </div>
+                  <div class="work-card-body">
+                    <h3>{{ album.title }}</h3>
+                    {% if album.meta_line %}<div class="member-meta">{{ album.meta_line }}</div>{% endif %}
+                    {% if not album.photos %}
+                      <div class="cell-sub warn">Empty — it stays off the public gallery until a photograph is added.</div>
+                    {% endif %}
+                  </div>
+                </a>
+                <div class="row-actions album-actions">
+                  <a class="btn outline small" href="{{ url_for('admin.edit_album', album_id=album.id) }}">Manage</a>
+                  <button class="btn small danger" type="submit" form="drop-album-{{ album.id }}">Delete</button>
+                </div>
+                <form id="drop-album-{{ album.id }}" method="post"
+                      action="{{ url_for('admin.delete_album', album_id=album.id) }}"
+                      onsubmit="return confirm('Delete “{{ album.title }}” and all {{ album.count }} of its photographs? This cannot be undone.')"></form>
+              </article>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <div class="panel-body"><p class="empty">No albums yet. Create the first one.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

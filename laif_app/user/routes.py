@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from flask import current_app, flash, redirect, render_template, request, send_from_directory, session, url_for
 
 from config import (
+    GIVING_FIELDS,
     IMAGES_DIR,
     MAX_MEMBER_LINKS,
     MAX_PORTFOLIO_ITEMS,
@@ -23,16 +24,26 @@ from laif_app.models import (
     AccessCode,
     Comment,
     ContactMessage,
+    GalleryAlbum,
     MemberLink,
     OtpChallenge,
     PortfolioItem,
     PortfolioWork,
     Post,
+    Project,
     Resource,
+    SiteSetting,
     User,
     WorkLink,
 )
 from laif_app.user import user_bp
+
+
+# Shown when a suspended account tries to sign in or recover a password.
+_DEACTIVATED = (
+    "This account has been deactivated. Please contact the church office "
+    "if you think that is a mistake."
+)
 
 
 # Wide shots only: these files carry no EXIF rotation, so they crop predictably
@@ -111,6 +122,7 @@ def download_resource(resource_id):
 def skills():
     members = (
         User.query.filter_by(role="member")
+        .filter(User.is_active.isnot(False))
         .filter(db.or_(User.skills != "", User.bio != ""))
         .order_by(User.name)
         .all()
@@ -121,7 +133,7 @@ def skills():
 @user_bp.route("/members/<int:user_id>")
 def member_profile(user_id):
     member = db.get_or_404(User, user_id)
-    if member.role == "admin":
+    if member.role == "admin" or not member.active:
         flash("That profile is not part of the member directory.", "info")
         return redirect(url_for("user.skills"))
     return render_template("user/member.html", member=member, works=member.works)
@@ -183,7 +195,10 @@ def like_post(post_id):
 def login():
     if request.method == "POST":
         user = User.query.filter_by(email=request.form.get("email", "").lower().strip()).first()
-        if user and user.check_password(request.form.get("password", "")):
+        if user and not user.active and user.check_password(request.form.get("password", "")):
+            flash(_DEACTIVATED, "error")
+            return render_template("user/auth.html", mode="login")
+        if user and user.active and user.check_password(request.form.get("password", "")):
             session["user_id"] = user.id
             landing = url_for("admin.dashboard") if user.role == "admin" else url_for("user.dashboard")
             return redirect(request.args.get("next") or landing)
@@ -197,7 +212,7 @@ def forgot_password():
     if request.method == "POST":
         user = User.query.filter_by(email=request.form.get("email", "").lower().strip()).first()
         preview = None
-        if user:
+        if user and user.active:
             user.reset_token = secrets.token_urlsafe(32)
             user.reset_sent_at = datetime.utcnow()
             db.session.commit()
@@ -766,3 +781,77 @@ def delete_work_link(link_id):
     db.session.commit()
     flash("Link removed.", "success")
     return redirect(url_for("user.edit_work", work_id=work_id))
+
+
+# ---------------------------------------------------------------------------
+# Projects, giving and the photo gallery
+# ---------------------------------------------------------------------------
+
+
+@user_bp.route("/projects")
+def projects():
+    """What the church is building, and how to give towards it.
+
+    Active appeals come first: a visitor who has come to give should not have
+    to scroll past finished work to find something to give to.
+    """
+    everything = Project.query.order_by(Project.created_at.desc()).all()
+    active = [p for p in everything if p.status == "active"]
+    completed = [p for p in everything if p.status == "completed"]
+    paused = [p for p in everything if p.status == "paused"]
+
+    giving = SiteSetting.all_of([key for key, _ in GIVING_FIELDS])
+    return render_template(
+        "user/projects.html",
+        active=active,
+        completed=completed,
+        paused=paused,
+        giving=giving,
+        giving_fields=GIVING_FIELDS,
+        # With no account details entered the giving panel is hidden rather
+        # than shown empty, which would look broken to a would-be giver.
+        has_giving=any(giving.get(key) for key, _ in GIVING_FIELDS),
+    )
+
+
+@user_bp.route("/projects/<int:project_id>")
+def project_detail(project_id):
+    project = db.get_or_404(Project, project_id)
+    giving = SiteSetting.all_of([key for key, _ in GIVING_FIELDS])
+    others = (
+        Project.query.filter(Project.id != project.id, Project.status == "active")
+        .order_by(Project.created_at.desc())
+        .limit(3)
+        .all()
+    )
+    return render_template(
+        "user/project_detail.html",
+        project=project,
+        others=others,
+        giving=giving,
+        giving_fields=GIVING_FIELDS,
+        has_giving=any(giving.get(key) for key, _ in GIVING_FIELDS),
+    )
+
+
+@user_bp.route("/gallery")
+def gallery():
+    """One tile per programme; the photographs live behind it."""
+    albums = GalleryAlbum.query.order_by(GalleryAlbum.created_at.desc()).all()
+    # An album with no photographs has nothing to show behind its tile.
+    return render_template("user/gallery.html", albums=[a for a in albums if a.photos])
+
+
+@user_bp.route("/gallery/<int:album_id>")
+def gallery_album(album_id):
+    """Every photograph from one programme."""
+    album = db.get_or_404(GalleryAlbum, album_id)
+    albums = [a for a in GalleryAlbum.query.order_by(GalleryAlbum.created_at.desc()).all() if a.photos]
+    position = albums.index(album) if album in albums else -1
+    return render_template(
+        "user/gallery_album.html",
+        album=album,
+        photos=album.photos,
+        previous=albums[position - 1] if position > 0 else None,
+        following=albums[position + 1] if 0 <= position + 1 < len(albums) else None,
+    )

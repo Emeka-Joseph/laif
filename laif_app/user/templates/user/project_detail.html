@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ project.title }} · Projects · LAIF Community{% endblock %}
+{% block description %}{{ project.summary or project.title ~ ' — a project of LAIF Church.' }}{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">{{ project.category or 'Church project' }}</div>
+    <h1>{{ project.title }}</h1>
+    {% if project.summary %}<p>{{ project.summary }}</p>{% endif %}
+    <div class="hero-actions">
+      <a class="btn outline" href="{{ url_for('user.projects') }}">← All projects</a>
+      {% if has_giving and project.status == 'active' %}
+        <a class="btn" href="#giving">Give to this project →</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container work-detail">
+
+    <div class="work-detail-main">
+      {% if project.image %}
+        <img class="project-hero-image"
+             src="{{ url_for('static', filename='uploads/' ~ project.image) }}"
+             alt="{{ project.title }}" decoding="async">
+      {% endif %}
+
+      {% if project.description %}
+        <div class="work-story">
+          <h2>About this project</h2>
+          {% for paragraph in project.description.split('\n') %}
+            {% if paragraph.strip() %}<p>{{ paragraph }}</p>{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <aside class="work-detail-side">
+      <div class="side-card">
+        <div class="eyebrow">
+          {% if project.status == 'completed' %}Completed
+          {% elif project.status == 'paused' %}On hold
+          {% else %}Where it stands{% endif %}
+        </div>
+
+        {% if project.progress is not none %}
+          <div class="progress big" role="img"
+               aria-label="{{ project.progress }} percent raised">
+            <span style="width:{{ project.progress }}%"></span>
+          </div>
+          <div class="progress-figures">
+            <div>
+              <strong>{{ project.currency }} {{ '{:,.0f}'.format(project.raised|float if project.raised else 0) }}</strong>
+              <span>raised so far</span>
+            </div>
+            <div>
+              <strong>{{ project.currency }} {{ '{:,.0f}'.format(project.target|float) }}</strong>
+              <span>target</span>
+            </div>
+            {% if project.still_needed and project.status == 'active' %}
+              <div>
+                <strong>{{ project.currency }} {{ '{:,.0f}'.format(project.still_needed) }}</strong>
+                <span>still needed</span>
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <p class="dash-hint">This project is carried by gifts as they come in rather than towards a fixed target.</p>
+        {% endif %}
+
+        <div class="profile-contact stacked" style="margin-top:18px">
+          {% if project.location %}<span>📍 {{ project.location }}</span>{% endif %}
+          {% if project.starts_on %}<span>🗓 {{ project.starts_on }}</span>{% endif %}
+        </div>
+      </div>
+
+      {% if has_giving %}
+        <div class="side-card" id="giving">
+          <div class="eyebrow">How to give</div>
+          <h3>Account details</h3>
+          <p class="dash-hint">Please use <strong>{{ project.title }}</strong> as the transfer reference.</p>
+          <dl class="giving-list">
+            {% for key, label in giving_fields %}
+              {% if giving[key] and key != 'giving_note' %}
+                <div><dt>{{ label }}</dt><dd>{{ giving[key] }}</dd></div>
+              {% endif %}
+            {% endfor %}
+          </dl>
+          {% if giving.giving_note %}<p class="giving-note">{{ giving.giving_note }}</p>{% endif %}
+        </div>
+      {% endif %}
+
+      {% if others %}
+        <div class="side-card">
+          <div class="eyebrow">Also open</div>
+          <ul class="work-nav">
+            {% for other in others %}
+              <li><a href="{{ url_for('user.project_detail', project_id=other.id) }}">{{ other.title }} →</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </aside>
+
+  </div>
+</section>
+
+{% endblock %}

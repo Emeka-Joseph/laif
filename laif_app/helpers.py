@@ -20,8 +20,19 @@ from laif_app.models import User
 
 
 def current_user():
+    """The signed-in account, or None.
+
+    A suspended account reads as signed out even if its session cookie is
+    still valid, so deactivating someone takes effect on their next click
+    rather than whenever they happen to log out.
+    """
     user_id = session.get("user_id")
-    return db.session.get(User, user_id) if user_id else None
+    if not user_id:
+        return None
+    user = db.session.get(User, user_id)
+    if user and not user.active:
+        return None
+    return user
 
 
 def admin_required(view):

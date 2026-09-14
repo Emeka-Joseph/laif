@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Gallery · LAIF Community{% endblock %}
+{% block description %}Photographs from LAIF Church programmes — conventions, outreaches and the ordinary Sundays in between.{% endblock %}
+{% block content %}
+
+<section class="page-hero">
+  <div class="container">
+    <div class="eyebrow">Gallery</div>
+    <h1>Moments from our programmes.</h1>
+    <p>Each picture below opens a programme of its own. Step inside to see the whole set.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if albums %}
+      <div class="work-grid album-grid">
+        {% for album in albums %}
+          <article class="work-card album-card">
+            <a href="{{ url_for('user.gallery_album', album_id=album.id) }}">
+              <div class="work-card-media">
+                {% if album.cover %}
+                  <img src="{{ url_for('static', filename='uploads/' ~ album.cover.filename) }}"
+                       alt="{{ album.title }}" loading="lazy" decoding="async">
+                {% else %}
+                  <span class="work-thumb-empty">{{ album.title[:1]|upper }}</span>
+                {% endif %}
+                <span class="work-count">{{ album.count }} photo{{ '' if album.count == 1 else 's' }}</span>
+              </div>
+              <div class="work-card-body">
+                <h3>{{ album.title }}</h3>
+                {% if album.meta_line %}<div class="member-meta">{{ album.meta_line }}</div>{% endif %}
+                {% if album.description %}<p>{{ album.description[:120] }}{% if album.description|length > 120 %}…{% endif %}</p>{% endif %}
+                <span class="album-open">View the album →</span>
+              </div>
+            </a>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="notice">No programmes have been added to the gallery yet. Please check back after our next service.</div>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

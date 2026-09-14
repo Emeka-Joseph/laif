@@ -57,10 +57,25 @@ def backfill_works():
         db.session.commit()
 
 
+def activate_existing_accounts():
+    """Mark accounts that predate suspension as active.
+
+    sync_columns() adds is_active as a nullable column, so rows written
+    before it existed read as NULL. User.active already treats NULL as
+    active; this settles the stored value so admin filters and counts agree.
+    """
+    stale = User.query.filter(User.is_active.is_(None)).all()
+    for user in stale:
+        user.is_active = True
+    if stale:
+        db.session.commit()
+
+
 def seed():
     db.create_all()
     sync_columns()
     backfill_works()
+    activate_existing_accounts()
     if not User.query.filter_by(role="admin").first():
         admin_user = User(
             name="LAIF Administrator",

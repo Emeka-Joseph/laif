@@ -27,7 +27,7 @@
           <div class="eyebrow">Accounts</div>
           <h2>
             {{ members|length }} shown
-            {% if search or role != 'all' %}<span class="of-total">of {{ total }}</span>{% endif %}
+            {% if search or role != 'all' or status != 'all' %}<span class="of-total">of {{ total }}</span>{% endif %}
           </h2>
         </div>
 
@@ -38,8 +38,13 @@
             <option value="member" {% if role == 'member' %}selected{% endif %}>Members</option>
             <option value="admin" {% if role == 'admin' %}selected{% endif %}>Administrators</option>
           </select>
+          <select name="status" aria-label="Filter by status">
+            <option value="all" {% if status == 'all' %}selected{% endif %}>Any status</option>
+            <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+            <option value="suspended" {% if status == 'suspended' %}selected{% endif %}>Deactivated{% if suspended_count %} ({{ suspended_count }}){% endif %}</option>
+          </select>
           <button class="btn small" type="submit">Search</button>
-          {% if search or role != 'all' %}
+          {% if search or role != 'all' or status != 'all' %}
             <a class="btn outline small" href="{{ url_for('admin.members') }}">Clear</a>
           {% endif %}
         </form>
@@ -54,6 +59,7 @@
               <th>Phone</th>
               <th>Location</th>
               <th>Role</th>
+              <th>Status</th>
               <th class="right">Actions</th>
             </tr>
           </thead>
@@ -79,6 +85,10 @@
                 <td>{% if member.phone %}<a href="tel:{{ member.phone }}">{{ member.phone }}</a>{% else %}<span class="none">—</span>{% endif %}</td>
                 <td>{{ member.location or '—' }}</td>
                 <td><span class="badge {{ member.role }}">{{ member.role }}</span></td>
+                <td>
+                  {% if member.active %}<span class="pill active">Active</span>
+                  {% else %}<span class="pill suspended">Deactivated</span>{% endif %}
+                </td>
                 <td class="right">
                   <div class="row-actions">
                     <a class="btn outline small" href="{{ url_for('admin.member_detail', user_id=member.id) }}">View</a>
@@ -99,8 +109,8 @@
               </tr>
             {% else %}
               <tr>
-                <td colspan="6" class="empty">
-                  {% if search or role != 'all' %}No account matches that search.{% else %}No accounts yet.{% endif %}
+                <td colspan="7" class="empty">
+                  {% if search or role != 'all' or status != 'all' %}No account matches that search.{% else %}No accounts yet.{% endif %}
                 </td>
               </tr>
             {% endfor %}

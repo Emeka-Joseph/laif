@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{{ album.title if album else "New album" }} · Gallery · Admin · LAIF{% endblock %}
+{% block content %}
+
+{% macro value(field) -%}
+  {{ form[field] if form else (album[field] if album else '') }}
+{%- endmacro %}
+
+<section class="page-hero admin-hero">
+  <div class="container">
+    <div class="eyebrow">Gallery</div>
+    <h1>{{ album.title if album else "New album" }}</h1>
+    <p>
+      {% if album %}
+        {{ album.count }} photograph{{ '' if album.count == 1 else 's' }} in this album.
+      {% else %}
+        Name the programme first; you can add its photographs on the next screen.
+      {% endif %}
+    </p>
+    <div class="hero-actions">
+      <a class="btn outline" href="{{ url_for('admin.albums') }}">← All albums</a>
+      {% if album and album.photos %}
+        <a class="btn outline" href="{{ url_for('user.gallery_album', album_id=album.id) }}">View public page</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="section admin-section">
+  <div class="container">
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">Details</div>
+          <h2>About this programme</h2>
+        </div>
+      </div>
+      <div class="panel-body">
+        <form method="post">
+          <label>Programme title<input name="title" value="{{ value('title') }}" required placeholder="e.g. 15th Annual Convention"></label>
+          <div class="field-grid">
+            <label>When<input name="held_on" value="{{ value('held_on') }}" placeholder="e.g. August 2025"></label>
+            <label>Where<input name="location" value="{{ value('location') }}" placeholder="e.g. Fellowship Hall, Kuwait"></label>
+          </div>
+          <label>Description<textarea name="description" rows="4" placeholder="A sentence or two about the programme.">{{ value('description') }}</textarea></label>
+          <button class="btn" style="margin-top:18px">{{ "Save details" if album else "Create album" }}</button>
+        </form>
+      </div>
+    </div>
+
+    {% if album %}
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="eyebrow">Photographs</div>
+            <h2>Add to this album</h2>
+          </div>
+        </div>
+        <div class="panel-body">
+          <form method="post" action="{{ url_for('admin.add_album_photos', album_id=album.id) }}" enctype="multipart/form-data">
+            <label>Choose photographs — you can select several at once
+              <input type="file" name="photos" accept="image/*" multiple required>
+            </label>
+            <label>Caption for this batch (optional)
+              <input name="caption" maxlength="400" placeholder="Applied to every photograph added now; you can edit each one below.">
+            </label>
+            <p class="dash-hint">Up to {{ max_photos }} photographs per album, 8MB each. {{ max_photos - album.count }} slot{{ '' if (max_photos - album.count) == 1 else 's' }} left.</p>
+            <button class="btn" style="margin-top:14px">Upload photographs</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="eyebrow">In this album</div>
+            <h2>{{ album.count }} photograph{{ '' if album.count == 1 else 's' }}</h2>
+          </div>
+        </div>
+        <div class="panel-body">
+          {% if album.photos %}
+            <div class="gallery admin-photo-grid">
+              {% for photo in album.photos %}
+                <figure class="tile admin-photo{% if photo.is_cover %} is-cover{% endif %}">
+                  <img src="{{ url_for('static', filename='uploads/' ~ photo.filename) }}" alt="" loading="lazy">
+                  {% if photo.is_cover %}<span class="tile-badge">Cover</span>{% endif %}
+                  <figcaption>
+                    <form method="post" action="{{ url_for('admin.caption_photo', photo_id=photo.id) }}" class="caption-form">
+                      <input name="caption" value="{{ photo.caption }}" placeholder="Add a caption" maxlength="400">
+                      <button class="btn outline small">Save</button>
+                    </form>
+                    <div class="row-actions">
+                      {% if not photo.is_cover %}
+                        <button class="btn outline small" type="submit" form="cover-{{ photo.id }}">Make cover</button>
+                      {% endif %}
+                      <button class="btn small danger" type="submit" form="drop-photo-{{ photo.id }}">Delete</button>
+                    </div>
+                  </figcaption>
+                  {# Kept inside the figure: a form placed directly in the grid
+                     would take a cell of its own and break the columns. #}
+                  <form id="cover-{{ photo.id }}" method="post" action="{{ url_for('admin.make_cover', photo_id=photo.id) }}"></form>
+                  <form id="drop-photo-{{ photo.id }}" method="post"
+                        action="{{ url_for('admin.delete_photo', photo_id=photo.id) }}"
+                        onsubmit="return confirm('Delete this photograph?')"></form>
+                </figure>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="empty">No photographs yet. Add some above — the first one becomes the album cover.</p>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

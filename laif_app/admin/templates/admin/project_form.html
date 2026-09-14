@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if project else "New" }} project · Admin · LAIF{% endblock %}
+{% block content %}
+
+{# `form` carries back what was typed when a submission was rejected, so the
+   admin never loses their work to a validation message. #}
+{% macro value(field, fallback='') -%}
+  {{ form[field] if form else (project[field] if project else fallback) }}
+{%- endmacro %}
+
+<div class="form-wrap wide">
+  <div class="eyebrow">Admin dashboard</div>
+  <h2>{{ "Edit project" if project else "Post a new project" }}</h2>
+  <p class="intro">Church building, prison visitation, a mission trip — anything the family is being asked to carry.</p>
+
+  <form method="post" enctype="multipart/form-data">
+    <label>Project title<input name="title" value="{{ value('title') }}" required placeholder="e.g. Church building fund"></label>
+
+    <label>One-line summary
+      <input name="summary" value="{{ value('summary') }}" maxlength="400"
+             placeholder="Shown on the project tile">
+    </label>
+
+    <div class="field-grid">
+      <label>Category
+        <select name="category">
+          <option value="">—</option>
+          {% for category in categories %}
+            <option value="{{ category }}" {% if value('category') == category %}selected{% endif %}>{{ category }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>Status
+        <select name="status">
+          {% for status in statuses %}
+            <option value="{{ status }}" {% if (value('status') or 'active') == status %}selected{% endif %}>{{ status|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>Currency<input name="currency" value="{{ value('currency', 'KWD') }}" maxlength="10"></label>
+
+      <label>Target amount
+        <input name="target" inputmode="decimal"
+               value="{{ '{:.2f}'.format(project.target|float) if project and project.target else (form.target if form else '') }}"
+               placeholder="Leave blank for no target">
+      </label>
+
+      <label>Raised so far
+        <input name="raised" inputmode="decimal"
+               value="{{ '{:.2f}'.format(project.raised|float) if project and project.raised else (form.raised if form else '') }}"
+               placeholder="Update as gifts come in">
+      </label>
+
+      <label>Location<input name="location" value="{{ value('location') }}" placeholder="e.g. Kuwait City"></label>
+
+      <label>When<input name="starts_on" value="{{ value('starts_on') }}" placeholder="e.g. Starting March 2026"></label>
+    </div>
+
+    <label>Full description
+      <textarea name="description" rows="9" placeholder="Tell the family what this project is and why it matters.">{{ value('description') }}</textarea>
+    </label>
+
+    <label>Cover photograph
+      <input type="file" name="image" accept="image/*" data-preview="project-image-preview">
+    </label>
+    {% if project and project.image %}
+      <div class="avatar-row">
+        <img id="project-image-preview" class="avatar-preview wide"
+             src="{{ url_for('static', filename='uploads/' ~ project.image) }}" alt="">
+        <label class="check"><input type="checkbox" name="remove_image" value="1"> Remove this photograph</label>
+      </div>
+    {% else %}
+      <img id="project-image-preview" class="avatar-preview wide" hidden alt="">
+    {% endif %}
+
+    <label class="check" style="margin-top:14px">
+      <input type="checkbox" name="featured" value="1" {% if value('featured') %}checked{% endif %}>
+      Mark as a priority — adds a flag to its tile
+    </label>
+
+    <div class="hero-actions" style="margin-top:24px">
+      <button class="btn">{{ "Save changes" if project else "Post project" }}</button>
+      <a class="btn outline" href="{{ url_for('admin.projects') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

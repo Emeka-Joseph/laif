@@ -14,7 +14,17 @@
     <div>
       <div class="eyebrow">Account #{{ member.id }}</div>
       <h1>{{ member.name }}</h1>
-      <p><span class="badge {{ member.role }}">{{ member.role }}</span></p>
+      <p>
+        <span class="badge {{ member.role }}">{{ member.role }}</span>
+        {% if not member.active %}<span class="badge suspended">deactivated</span>{% endif %}
+      </p>
+      {% if not member.active %}
+        <div class="notice warn inline">
+          This account was deactivated{% if member.deactivated_at %} on {{ member.deactivated_at.strftime('%d %b %Y') }}{% endif %}.
+          They cannot sign in and their profile is hidden from the directory.
+          {% if member.deactivated_reason %}<br><strong>Reason:</strong> {{ member.deactivated_reason }}{% endif %}
+        </div>
+      {% endif %}
       <div class="hero-actions">
         <a class="btn outline" href="{{ url_for('admin.members') }}">← All members</a>
         {% if member.role != 'admin' %}
@@ -77,13 +87,46 @@
           {{ media_count }} file{{ '' if media_count == 1 else 's' }} uploaded
         </p>
         {% if works %}
-          <ul class="work-nav">
+          <ul class="work-nav moderate">
             {% for work in works %}
-              <li><a href="{{ url_for('user.member_work', user_id=member.id, work_id=work.id) }}">{{ work.title }}</a></li>
+              <li>
+                <a href="{{ url_for('user.member_work', user_id=member.id, work_id=work.id) }}">{{ work.title }}</a>
+                <button class="btn small danger" type="submit" form="drop-work-{{ work.id }}">Delete</button>
+                <form id="drop-work-{{ work.id }}" method="post"
+                      action="{{ url_for('admin.delete_member_work', work_id=work.id) }}"
+                      onsubmit="return confirm('Delete “{{ work.title }}” and its uploaded files? This cannot be undone.')"></form>
+              </li>
             {% endfor %}
           </ul>
+          <p class="dash-hint">Deleting a piece of work removes its photographs and clips from the server.</p>
         {% endif %}
       </div>
+
+      {% if member.role != 'admin' %}
+      <div class="side-card">
+        <div class="eyebrow">Access</div>
+        <h3>{{ "Reactivate" if not member.active else "Deactivate" }} this account</h3>
+        {% if member.active %}
+          <p class="dash-hint">
+            Blocks sign-in and hides the profile from the public directory. Nothing is
+            deleted — their work, photographs and details stay on file, and you can turn
+            it back on at any time. Prefer this to deletion.
+          </p>
+          <form method="post" action="{{ url_for('admin.deactivate_member', user_id=member.id) }}"
+                onsubmit="return confirm('Deactivate {{ member.name }}’s account? They will not be able to sign in.')">
+            <label>Reason (optional, seen only by administrators)
+              <input name="reason" maxlength="300" placeholder="e.g. Requested by the member">
+            </label>
+            <button class="btn" type="submit" style="margin-top:12px">Deactivate account</button>
+          </form>
+        {% else %}
+          <p class="dash-hint">Restores sign-in and puts the profile back in the directory exactly as it was.</p>
+          <form method="post" action="{{ url_for('admin.reactivate_member', user_id=member.id) }}">
+            <button class="btn" type="submit">Reactivate account</button>
+          </form>
+        {% endif %}
+      </div>
+      {% endif %}
 
       <div class="side-card danger-card">
         <div class="eyebrow">Danger zone</div>
