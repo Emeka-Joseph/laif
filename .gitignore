@@ -36,3 +36,7 @@ deploy/
 
 # Per-server secrets: database and mailbox passwords. Never commit.
 local_settings.py
+
+# Camera originals of the photographs. They are preserved in git history at
+# commit 7ba94cf; images/ now holds the web-sized versions the site serves.
+images_originals/
